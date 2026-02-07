@@ -34,6 +34,8 @@ class GameSpaceService : Service() {
         controller = PerformanceController(this)
         gameDetector = GameDetector(this)
 
+        controller.onRequestShowTrigger = { showTrigger() }
+
         createNotificationChannel()
         startForeground(1001, buildNotification())
 
@@ -48,6 +50,7 @@ class GameSpaceService : Service() {
                 controller.onGameExit()
                 triggerView.visibility = View.GONE
                 overlayView.visibility = View.GONE
+                controller.onGameExit()
             }
         }
 
@@ -65,6 +68,18 @@ class GameSpaceService : Service() {
         controller.bindOverlay(overlayView)
         windowManager.addView(overlayView, controller.windowParams)
 
+        // Root captures outside touches
+        overlayView.setOnClickListener {
+            overlayView.visibility = View.GONE
+            triggerView.visibility = View.VISIBLE
+        }
+
+        // Prevent clicks inside panel from closing it
+        overlayView.findViewById<View>(R.id.panel_background)
+        ?.setOnClickListener {
+            // Consume click, do nothing
+        }
+
         overlayView.visibility = View.GONE
     }
 
@@ -81,11 +96,19 @@ class GameSpaceService : Service() {
         triggerView.setOnClickListener {
             overlayView.visibility = View.VISIBLE
             triggerView.visibility = View.GONE
+            controller.onPanelOpened()
         }
 
-        overlayView.setOnClickListener {
-            overlayView.visibility = View.GONE
-            triggerView.visibility = View.VISIBLE
+    }
+
+    private fun showTrigger() {
+        triggerView?.apply {
+            visibility = View.VISIBLE
+            alpha = 0f
+            animate()
+            .alpha(1f)
+            .setDuration(200)
+            .start()
         }
     }
 

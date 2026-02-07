@@ -1,5 +1,6 @@
 package mx.xperience.gamespace.controller
 
+import android.animation.ValueAnimator
 import android.app.ActivityManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
@@ -13,6 +14,9 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.TextView
+
+import androidx.cardview.widget.CardView
+
 import mx.xperience.gamespace.R
 import mx.xperience.gamespace.utils.FPSMonitor
 import mx.xperience.gamespace.utils.PerformanceManager
@@ -21,6 +25,8 @@ import mx.xperience.gamespace.utils.PerformanceManager
  * Controls performance modes, foreground detection and overlay updates.
  */
 class PerformanceController(private val context: Context) {
+
+    var onRequestShowTrigger: (() -> Unit)? = null
 
     enum class PerformanceMode {
         POWER_SAVING,
@@ -47,16 +53,42 @@ class PerformanceController(private val context: Context) {
 
     private lateinit var panelView: View
 
+    //Animation
+    private lateinit var btnEco: TextView
+    private lateinit var btnBalanced: TextView
+    private lateinit var btnPerf: TextView
+    private lateinit var btnTurbo: TextView
+
     /**
      * Binds overlay UI and initializes window parameters.
      */
     fun bindOverlay(view: View) {
         fpsText = view.findViewById(R.id.fps_counter)
         waveView = view.findViewById(R.id.cpu_chart)
+        btnEco = view.findViewById(R.id.btn_power_saving)
+        btnBalanced = view.findViewById(R.id.btn_balanced)
+        btnPerf = view.findViewById(R.id.btn_performance)
+        btnTurbo = view.findViewById(R.id.btn_turbo)
         panelView = view
+        //touch outside
+        view.findViewById<View>(R.id.outside_touch).setOnClickListener {
+            panelView.visibility = View.GONE
+            onRequestShowTrigger?.invoke()
+        }
+
+        //drag
+        enableDrag(panelView)
+        bindPerformanceButtons(view)
 
         windowParams = createOverlayParams(Gravity.TOP or Gravity.END, 20, 200)
         triggerWindowParams = createOverlayParams(Gravity.CENTER_VERTICAL or Gravity.START, 20, 0)
+
+        btnEco.setOnClickListener { onModeSelected(PerformanceMode.POWER_SAVING) }
+        btnBalanced.setOnClickListener { onModeSelected(PerformanceMode.BALANCED) }
+        btnPerf.setOnClickListener { onModeSelected(PerformanceMode.PERFORMANCE) }
+        btnTurbo.setOnClickListener { onModeSelected(PerformanceMode.TURBO) }
+
+        initPerformanceButtons()
     }
 
     /**
@@ -71,6 +103,19 @@ class PerformanceController(private val context: Context) {
         })
     }
 
+    private fun closePanelAndShowTrigger() {
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+        try {
+            wm.removeView(panelView)
+        } catch (_: Exception) {}
+
+        onRequestShowTrigger?.invoke()
+    }
+
+    fun onPanelOpened() {
+        startFpsUpdates()
+    }
     /**
      * Called when a game enters foreground.
      */
@@ -79,7 +124,6 @@ class PerformanceController(private val context: Context) {
 
         currentGame = pkg
         setMode(PerformanceMode.PERFORMANCE)
-        startFpsUpdates()
     }
 
     /**
@@ -100,6 +144,8 @@ class PerformanceController(private val context: Context) {
         if (mode == currentMode) return
         currentMode = mode
         perfManager.applyMode(mode)
+        updatePerformanceUI()
+        showModeChangeAnimation(mode)
     }
 
     /**
@@ -192,7 +238,7 @@ class PerformanceController(private val context: Context) {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         ).apply {
             this.gravity = gravity
@@ -200,4 +246,247 @@ class PerformanceController(private val context: Context) {
             this.y = y
         }
     }
+
+    private fun enableDrag(view: View) {
+        var lastX = 0
+        var lastY = 0
+        var downX = 0f
+        var downY = 0f
+
+        view.setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    lastX = windowParams.x
+                    lastY = windowParams.y
+                    downX = event.rawX
+                    downY = event.rawY
+                    true
+                }
+
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    val dx = (event.rawX - downX).toInt()
+                    val dy = (event.rawY - downY).toInt()
+
+                    windowParams.x = lastX + dx
+                    windowParams.y = lastY + dy
+
+                    val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+                    wm.updateViewLayout(view, windowParams)
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    private fun bindPerformanceButtons(view: View) {
+        view.findViewById<TextView>(R.id.btn_power_saving).setOnClickListener {
+            applyUserMode(PerformanceMode.POWER_SAVING)
+        }
+
+        view.findViewById<TextView>(R.id.btn_balanced).setOnClickListener {
+            applyUserMode(PerformanceMode.BALANCED)
+        }
+
+        view.findViewById<TextView>(R.id.btn_performance).setOnClickListener {
+            applyUserMode(PerformanceMode.PERFORMANCE)
+        }
+
+        view.findViewById<TextView>(R.id.btn_turbo).setOnClickListener {
+            applyUserMode(PerformanceMode.TURBO)
+        }
+    }
+
+    private fun initPerformanceButtons() {
+        val eco = panelView.findViewById<TextView>(R.id.btn_power_saving)
+        val balanced = panelView.findViewById<TextView>(R.id.btn_balanced)
+        val perf = panelView.findViewById<TextView>(R.id.btn_performance)
+        val turbo = panelView.findViewById<TextView>(R.id.btn_turbo)
+
+        eco.setOnClickListener { switchMode(PerformanceMode.POWER_SAVING) }
+        balanced.setOnClickListener { switchMode(PerformanceMode.BALANCED) }
+        perf.setOnClickListener { switchMode(PerformanceMode.PERFORMANCE) }
+        turbo.setOnClickListener { switchMode(PerformanceMode.TURBO) }
+
+        updateModeUI()
+    }
+
+    private fun switchMode(mode: PerformanceMode) {
+        if (mode == currentMode) return
+
+            currentMode = mode
+            perfManager.applyMode(mode)
+            updateModeUI()
+            showModeChangeAnimation(mode)
+    }
+
+    private fun updateModeUI() {
+        val eco = panelView.findViewById<TextView>(R.id.btn_power_saving)
+        val balanced = panelView.findViewById<TextView>(R.id.btn_balanced)
+        val perf = panelView.findViewById<TextView>(R.id.btn_performance)
+        val turbo = panelView.findViewById<TextView>(R.id.btn_turbo)
+
+        val all = listOf(eco, balanced, perf, turbo)
+
+        all.forEach {
+            it.setTextColor(Color.parseColor("#888888"))
+            it.background = null
+        }
+
+        val (btn, color) = when (currentMode) {
+            PerformanceMode.POWER_SAVING -> eco to "#00FFFF"
+            PerformanceMode.BALANCED -> balanced to "#00FF41"
+            PerformanceMode.PERFORMANCE -> perf to "#FF00FF"
+            PerformanceMode.TURBO -> turbo to "#FFA500"
+        }
+
+        btn.setTextColor(Color.parseColor(color))
+        btn.setBackgroundResource(R.drawable.bg_mode_selected)
+    }
+
+    private fun updatePerformanceUI() {
+        val btnPowerSaving = panelView.findViewById<TextView>(R.id.btn_power_saving)
+        val btnBalanced = panelView.findViewById<TextView>(R.id.btn_balanced)
+        val btnPerformance = panelView.findViewById<TextView>(R.id.btn_performance)
+        val btnTurbo = panelView.findViewById<TextView>(R.id.btn_turbo)
+
+        // Reset backgrounds
+        btnPowerSaving.background = context.getDrawable(R.drawable.bg_mode_normal)
+        btnBalanced.background = context.getDrawable(R.drawable.bg_mode_normal)
+        btnPerformance.background = context.getDrawable(R.drawable.bg_mode_normal)
+        btnTurbo.background = context.getDrawable(R.drawable.bg_mode_normal)
+
+        // Reset text colors
+        btnPowerSaving.setTextColor(Color.parseColor("#888888"))
+        btnBalanced.setTextColor(Color.parseColor("#888888"))
+        btnPerformance.setTextColor(Color.parseColor("#888888"))
+        btnTurbo.setTextColor(Color.parseColor("#888888"))
+
+        when (currentMode) {
+            PerformanceMode.POWER_SAVING -> {
+                btnPowerSaving.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnPowerSaving.setTextColor(Color.parseColor("#00FFFF"))
+            }
+            PerformanceMode.BALANCED -> {
+                btnBalanced.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnBalanced.setTextColor(Color.parseColor("#00FF41"))
+            }
+            PerformanceMode.PERFORMANCE -> {
+                btnPerformance.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnPerformance.setTextColor(Color.parseColor("#FF00FF"))
+            }
+            PerformanceMode.TURBO -> {
+                btnTurbo.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnTurbo.setTextColor(Color.parseColor("#FFA500"))
+            }
+        }
+
+        updateModeIndicator()
+    }
+
+
+    private fun updateModeIndicator() {
+        val modeIndicator = panelView.findViewById<TextView>(R.id.mode_indicator)
+
+        when (currentMode) {
+            PerformanceMode.POWER_SAVING -> {
+                modeIndicator.text = "ECO"
+                modeIndicator.setTextColor(Color.parseColor("#00FFFF"))
+            }
+            PerformanceMode.BALANCED -> {
+                modeIndicator.text = "BALANCED"
+                modeIndicator.setTextColor(Color.parseColor("#00FF41"))
+            }
+            PerformanceMode.PERFORMANCE -> {
+                modeIndicator.text = "PERF"
+                modeIndicator.setTextColor(Color.parseColor("#FF00FF"))
+            }
+            PerformanceMode.TURBO -> {
+                modeIndicator.text = "TURBO"
+                modeIndicator.setTextColor(Color.parseColor("#FFA500"))
+            }
+        }
+    }
+
+    private fun applyUserMode(mode: PerformanceMode) {
+        setMode(mode)
+        showModePulse(mode)
+    }
+
+    private fun onModeSelected(mode: PerformanceMode) {
+        if (mode == currentMode) return
+
+            setMode(mode)
+            updatePerformanceUI()
+            showModeChangeAnimation(mode)
+    }
+
+    private fun showModeChangeAnimation(mode: PerformanceMode) {
+        val panelBackground =
+        panelView.findViewById<androidx.cardview.widget.CardView>(R.id.panel_background)
+
+        val pulseColor = when (mode) {
+            PerformanceMode.POWER_SAVING -> Color.parseColor("#00FFFF")
+            PerformanceMode.BALANCED -> Color.parseColor("#00FF41")
+            PerformanceMode.PERFORMANCE -> Color.parseColor("#FF00FF")
+            PerformanceMode.TURBO -> Color.parseColor("#FFA500")
+        }
+
+        panelBackground.animate()
+        .scaleX(1.05f)
+        .scaleY(1.05f)
+        .setDuration(200)
+        .withEndAction {
+            panelBackground.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(200)
+            .start()
+        }
+        .start()
+
+        val borderAnimator = ValueAnimator.ofArgb(
+            Color.TRANSPARENT,
+            Color.argb(
+                120,
+                Color.red(pulseColor),
+                       Color.green(pulseColor),
+                       Color.blue(pulseColor)
+            )
+        )
+
+        borderAnimator.duration = 500
+        borderAnimator.addUpdateListener {
+            panelBackground.setCardBackgroundColor(it.animatedValue as Int)
+        }
+        borderAnimator.start()
+    }
+
+
+    private fun showModePulse(mode: PerformanceMode) {
+        val panel = panelView.findViewById<View>(R.id.panel_background)
+
+        val color = when (mode) {
+            PerformanceMode.POWER_SAVING -> Color.parseColor("#00FFFF")
+            PerformanceMode.BALANCED -> Color.parseColor("#00FF41")
+            PerformanceMode.PERFORMANCE -> Color.parseColor("#FF00FF")
+            PerformanceMode.TURBO -> Color.parseColor("#FFA500")
+        }
+
+        panel.animate()
+        .scaleX(1.04f)
+        .scaleY(1.04f)
+        .setDuration(120)
+        .withEndAction {
+            panel.animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(120)
+            .start()
+        }
+        .start()
+    }
+
+
 }
