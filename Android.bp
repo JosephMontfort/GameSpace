@@ -1,0 +1,77 @@
+// Android.bp para GameSpace (AOSP/Soong)
+android_app {
+    name: "GameSpace",
+    platform_apis: true,
+
+    defaults: [
+        "SettingsLibDefaults",
+    ],
+
+    // Fuentes
+    srcs: [
+        "java/**/*.java",
+        "java/**/*.kt",
+        "java/**/*.aidl",
+    ],
+    
+    aidl: {
+        local_include_dirs: ["java"],
+    },
+
+    // Recursos
+    resource_dirs: ["res"],
+    
+    // Manifest
+    manifest: "AndroidManifest.xml",
+    
+    // Firmado como app de sistema
+    certificate: "platform",
+    
+    // App privilegiada (priv-app)
+    privileged: true,
+    
+    // Para depuración
+    dex_preopt: {
+        enabled: false,
+    },
+    
+    optimize: {
+        enabled: false,
+    },
+    
+    // Dependencias AOSP
+    static_libs: [
+        "androidx.core_core",
+        "androidx.appcompat_appcompat",
+        "androidx.cardview_cardview",
+        "androidx-constraintlayout_constraintlayout",
+        "com.google.android.material_material",
+    ],
+    
+    kotlincflags: [
+        "-opt-in=kotlin.Experimental",
+        "-opt-in=kotlin.ExperimentalStdlibApi",
+    ],
+    
+    
+    // Específico del producto
+    //product_specific: true,
+    system_ext_specific: true,
+    
+    // Sobrescribe cualquier app con mismo nombre
+    //overrides: ["GameBar"],
+    
+    // Para servicios foreground
+    required: [
+        "ANGLE",
+        "privapp_whitelist_mx.xperience.gamespace.xml"
+    ],
+}
+
+prebuilt_etc_xml {
+    name: "privapp_whitelist_mx.xperience.gamespace.xml",
+    src: "privapp_whitelist_mx.xperience.gamespace.xml",
+    system_ext_specific: true,
+    filename_from_src: true,
+    sub_dir: "permissions",
+}

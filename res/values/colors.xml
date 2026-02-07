@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+
+        <!-- Colores gaming -->
+        <color name="gaming_green">#00FF41</color>
+        <color name="gaming_cyan">#00FFFF</color>
+        <color name="gaming_magenta">#FF00FF</color>
+        <color name="gaming_yellow">#FFD700</color>
+        <color name="gaming_orange">#FFA500</color>
+        <color name="gaming_red">#FF4500</color>
+
+        <!-- Fondos -->
+        <color name="bg_dark">#1A1A1A</color>
+        <color name="bg_darker">#0A0A0A</color>
+        <color name="bg_overlay">#CC000000</color>
+
+</resources>

@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent">
+
+    <!-- Fondo con blur y gradiente gaming - TAMAÑO FIJO -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/panel_background"
+        android:layout_width="350dp"
+        android:layout_height="340dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="8dp"
+        android:layout_margin="8dp">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:alpha="0.98"
+            android:background="@drawable/bg_panel_dark">  <!-- Padding reducido -->
+
+            <!-- Fondo de efecto blur -->
+            <View
+                android:id="@+id/panel_blur_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_gaming_blur" />
+
+            <!-- Contenido principal COMPACTO -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp">  <!-- Padding mínimo -->
+
+                <!-- Header con logo - COMPACTO -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="28dp"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_gaming_logo"
+                        android:tint="#00FF41" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:fontFamily="monospace"
+                        android:letterSpacing="0.05"
+                        android:text="GAME SPACE"
+                        android:textColor="#FFFFFF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp">
+                        <!-- Indicador de modo activo -->
+                        <TextView
+                            android:id="@+id/mode_indicator"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:background="@drawable/bg_mode_indicator"
+                            android:padding="2dp"
+                            android:text="BALANCED"
+                            android:textColor="#00FF41"
+                            android:textSize="9sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+
+                <!-- Fila 1: CPU y GPU - COMPACTA -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal">
+
+                    <!-- CPU Card - COMPACTA -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="#1A1A1A"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">  <!-- Padding reducido -->
+
+                            <!-- Título con icono - COMPACTO -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="6dp"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:src="@drawable/ic_cpu"
+                                    android:tint="#4a9cf7" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="CPU"
+                                    android:textColor="#AAAAAA"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Gráfico de onda - MÁS PEQUEÑO -->
+                            <mx.xperience.gamespace.view.WaveView
+                                android:id="@+id/cpu_chart"
+                                android:layout_width="match_parent"
+                                android:layout_height="30dp"
+                                android:layout_marginBottom="6dp" />
+
+                            <!-- Valor y temperatura - COMPACTO -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/cpu_val"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:fontFamily="monospace"
+                                    android:text="3.30"
+                                    android:textColor="#4a9cf7"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/cpu_temp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="monospace"
+                                    android:text="52.2°C"
+                                    android:textColor="#FFA500"
+                                    android:textSize="10sp" />
+                            </LinearLayout>
+
+                           <!-- <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="GHz"
+                                android:textColor="#666666"
+                                android:textSize="9sp" />-->
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- GPU Card - COMPACTA -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:backgroundTint="#1A1A1A"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+
+                            <!-- Título con icono - COMPACTO -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="6dp"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:src="@drawable/ic_gpu"
+                                    android:tint="#f74a7b" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="GPU"
+                                    android:textColor="#AAAAAA"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Gráfico de onda - MÁS PEQUEÑO -->
+                            <mx.xperience.gamespace.view.WaveView
+                                android:id="@+id/gpu_chart"
+                                android:layout_width="match_parent"
+                                android:layout_height="30dp"
+                                android:layout_marginBottom="6dp" />
+
+                            <!-- Valor y temperatura - COMPACTO -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/gpu_val"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:fontFamily="monospace"
+                                    android:text="N/A"
+                                    android:textColor="#f74a7b"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold" />
+
+                                <TextView
+                                    android:id="@+id/gpu_temp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="monospace"
+                                    android:text="52.3°C"
+                                    android:textColor="#FFA500"
+                                    android:textSize="10sp" />
+                            </LinearLayout>
+
+                            <!--<TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="end"
+                                android:text="MHz"
+                                android:textColor="#666666"
+                                android:textSize="9sp" />-->
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+                </LinearLayout>
+
+                <!-- Fila 2: FPS y RAM - COMPACTA -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal">
+
+                    <!-- FPS Card - COMPACTA -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:backgroundTint="#1A1A1A"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+
+                            <!-- Título con icono - COMPACTO -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="6dp"
+                                android:gravity="center">
+
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:src="@drawable/ic_fps"
+                                    android:tint="#00FFFF" />
+                            </LinearLayout>
+
+                            <!-- Valor FPS - MÁS PEQUEÑO -->
+                            <TextView
+                                android:id="@+id/fps_counter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="monospace"
+                                android:text="--"
+                                android:textColor="#00FFFF"
+                                android:textSize="24sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:text="FPS"
+                                android:textColor="#666666"
+                                android:textSize="9sp" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+
+                    <!-- RAM Card - COMPACTA -->
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:backgroundTint="#1A1A1A"
+                        app:cardCornerRadius="10dp"
+                        app:cardElevation="2dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+
+                            <!-- Título con icono - COMPACTO -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="6dp"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:layout_width="14dp"
+                                    android:layout_height="14dp"
+                                    android:src="@drawable/ic_ram"
+                                    android:tint="#FFD700" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="4dp"
+                                    android:text="RAM"
+                                    android:textColor="#AAAAAA"
+                                    android:textSize="9sp"
+                                    android:textStyle="bold" />
+                            </LinearLayout>
+
+                            <!-- Barra de progreso RAM - DELGADA -->
+                            <androidx.core.widget.ContentLoadingProgressBar
+                                android:id="@+id/ram_progress"
+                                style="?android:attr/progressBarStyleHorizontal"
+                                android:layout_width="match_parent"
+                                android:layout_height="3dp"
+                                android:layout_marginBottom="6dp"
+                                android:progressDrawable="@drawable/progress_ram" />
+
+                            <!-- Valores RAM - COMPACTOS -->
+                            <TextView
+                                android:id="@+id/ram_info"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="monospace"
+                                android:gravity="center"
+                                android:text="7.4/11.2 GB"
+                                android:textColor="#FFFFFF"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/ram_percent"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="monospace"
+                                android:gravity="center"
+                                android:text="65%"
+                                android:textColor="#FFD700"
+                                android:textSize="10sp" />
+                        </LinearLayout>
+                    </androidx.cardview.widget.CardView>
+                </LinearLayout>
+
+                <!-- Footer: Info del juego - SUPER COMPACTO -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:backgroundTint="#0A0A0A"
+                    android:padding="6dp"
+                    app:cardCornerRadius="8dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:layout_marginEnd="6dp"
+                            android:src="@drawable/ic_game_controller"
+                            android:tint="#FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/game_name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:text="HablaconBrant"
+                            android:textColor="#FFFFFF"
+                            android:textSize="10sp" />
+
+                        <TextView
+                            android:id="@+id/battery_info"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawableStart="@drawable/ic_battery"
+                            android:drawablePadding="3dp"
+                            android:fontFamily="monospace"
+                            android:text="45% 26m"
+                            android:textColor="#00FF41"
+                            android:textSize="9sp" />
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Modos de rendimiento - debajo del header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_mode_selector">
+
+                    <!-- Botón Power Saving -->
+                    <TextView
+                        android:id="@+id/btn_power_saving"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="ECO"
+                        android:textColor="#00FFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_mode_selected"
+                        android:fontFamily="monospace"
+                        android:padding="4dp" />
+
+                    <!-- Botón Balanced -->
+                    <TextView
+                        android:id="@+id/btn_balanced"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="BALANCED"
+                        android:textColor="#00FF41"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:padding="4dp" />
+
+                    <!-- Botón Performance -->
+                    <TextView
+                        android:id="@+id/btn_performance"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="PERF"
+                        android:textColor="#FF00FF"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:padding="4dp" />
+
+                    <!-- Botón Custom/Turbo -->
+                    <TextView
+                        android:id="@+id/btn_turbo"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="TURBO"
+                        android:textColor="#FFA500"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:fontFamily="monospace"
+                        android:padding="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
+    </androidx.cardview.widget.CardView>
+
+</FrameLayout>
