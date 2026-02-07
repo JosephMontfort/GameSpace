@@ -413,7 +413,7 @@
                             android:layout_weight="1"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:text="HablaconBrant"
+                            android:text="Endfield"
                             android:textColor="#FFFFFF"
                             android:textSize="10sp" />
 

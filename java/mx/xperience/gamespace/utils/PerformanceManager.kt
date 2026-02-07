@@ -1,85 +1,77 @@
 package mx.xperience.gamespace.utils
 
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.net.wifi.WifiManager
-import android.os.BatteryManager
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
+
 import java.io.File
 
-class PerformanceManager(private val context: Context) {
+import mx.xperience.gamespace.controller.PerformanceController.PerformanceMode
 
-    enum class PerformanceMode { POWER_SAVING, BALANCED, PERFORMANCE, TURBO }
+/**
+ * Handles system-level performance optimizations.
+ */
+class PerformanceManager(private val context: Context) {
 
     private var wifiLock: WifiManager.WifiLock? = null
 
-        // Rutas de sistema para FPS (Hardware)
-        private val FPS_PATHS = arrayOf(
-            "/sys/class/drm/card0/sde_crtc_fps",
-            "/sys/class/graphics/fb0/fps",
-            "/sys/class/drm/sde-crtc-0/measured_fps"
-        )
+    /**
+     * Applies low-level optimizations for a given mode.
+     */
+    fun applyMode(mode: PerformanceMode) {
+        when (mode) {
+            PerformanceMode.POWER_SAVING -> setGaming(false)
+            PerformanceMode.BALANCED -> setGaming(false)
+            PerformanceMode.PERFORMANCE -> setGaming(true)
+            PerformanceMode.TURBO -> setGaming(true)
+        }
+    }
 
-        /**
-         * Lee los FPS directamente de los archivos de kernel
-         */
-        fun getHardwareFps(): Int {
-            for (path in FPS_PATHS) {
-                try {
-                    val file = File(path)
-                    if (file.exists()) {
-                        val fps = file.readText().trim().toIntOrNull() ?: 0
-                        if (fps > 0) return fps
-                    }
-                } catch (e: Exception) { continue }
+    private fun setGaming(enabled: Boolean) {
+        try {
+            val wifi =
+                context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            if (enabled) {
+                wifiLock = wifi.createWifiLock(
+                    WifiManager.WIFI_MODE_FULL_HIGH_PERF,
+                    "GameSpaceLock"
+                )
+                wifiLock?.acquire()
+                Settings.Global.putInt(
+                    context.contentResolver,
+                    "wifi_scan_always_enabled",
+                    0
+                )
+            } else {
+                wifiLock?.release()
+                Settings.Global.putInt(
+                    context.contentResolver,
+                    "wifi_scan_always_enabled",
+                    1
+                )
             }
+        } catch (e: Exception) {
+            Log.e("PerformanceManager", e.message ?: "Unknown error")
+        }
+    }
+
+    /**
+     * Returns CPU usage percentage.
+     */
+    fun getCpuUsage(): Int {
+        try {
+            val stat = File("/proc/stat").readLines()[0]
+            val parts = stat.split("\\s+".toRegex())
+            val idle = parts[4].toLong()
+            val total = parts.drop(1).map { it.toLong() }.sum()
+            return ((1f - idle.toFloat() / total) * 100).toInt()
+        } catch (e: Exception) {
             return 0
         }
+    }
 
-        /**
-         * Obtiene el estado detallado de la batería
-         */
-        fun getBatteryInfo(): String {
-            val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: 0
-            val temp = (intent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) ?: 0) / 10
-            return "$level% ${temp}°C"
-        }
-
-        /**
-         * Aplica optimizaciones de red y energía
-         */
-        fun setGamingMode(enabled: Boolean) {
-            try {
-                val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-
-                if (enabled) {
-                    // Bloqueo de WiFi para baja latencia
-                    if (wifiLock == null) {
-                        wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "GameSpaceLock")
-                    }
-                    wifiLock?.acquire()
-
-                    // Desactivar escaneo WiFi en segundo plano (Requiere WRITE_SECURE_SETTINGS)
-                    if (hasSecureSettingsPermission()) {
-                        Settings.Global.putInt(context.contentResolver, "wifi_scan_always_enabled", 0)
-                    }
-                } else {
-                    wifiLock?.release()
-                    if (hasSecureSettingsPermission()) {
-                        Settings.Global.putInt(context.contentResolver, "wifi_scan_always_enabled", 1)
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("PerformanceManager", "Error en optimización: ${e.message}")
-            }
-        }
-
-        private fun hasSecureSettingsPermission(): Boolean {
-            return context.checkSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED
-        }
+    fun release() {
+        wifiLock?.release()
+    }
 }
