@@ -8,23 +8,45 @@ import android.util.Log
 import java.io.File
 
 import mx.xperience.gamespace.controller.PerformanceController.PerformanceMode
+import mx.xperience.gamespace.sysfs.SysFsManager
 
 /**
- * Handles system-level performance optimizations.
+ * Applies kernel-level performance tuning via SysFS.
+ * This class contains all real performance knobs.
  */
 class PerformanceManager(private val context: Context) {
 
     private var wifiLock: WifiManager.WifiLock? = null
 
+    private val sysfs = SysfsController()
+
     /**
      * Applies low-level optimizations for a given mode.
      */
     fun applyMode(mode: PerformanceMode) {
-        when (mode) {
+        /*when (mode) {
             PerformanceMode.POWER_SAVING -> setGaming(false)
             PerformanceMode.BALANCED -> setGaming(false)
             PerformanceMode.PERFORMANCE -> setGaming(true)
             PerformanceMode.TURBO -> setGaming(true)
+        }*/
+        when (mode) {
+            PerformanceMode.POWER_SAVING -> {
+                sysfs.applyEco()
+                setGaming(false)
+            }
+            PerformanceMode.BALANCED -> {
+                sysfs.applyBalanced()
+                setGaming(false)
+            }
+            PerformanceMode.PERFORMANCE -> {
+                sysfs.applyPerformance()
+                setGaming(true)
+            }
+            PerformanceMode.TURBO -> {
+                sysfs.applyTurbo()
+                setGaming(true)
+            }
         }
     }
 
@@ -73,5 +95,6 @@ class PerformanceManager(private val context: Context) {
 
     fun release() {
         wifiLock?.release()
+        sysfs.applyBalanced()
     }
 }

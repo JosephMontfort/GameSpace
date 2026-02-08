@@ -124,6 +124,7 @@ class PerformanceController(private val context: Context) {
 
         currentGame = pkg
         setMode(PerformanceMode.PERFORMANCE)
+        startFpsUpdates() //fix weird behaviour with fps
     }
 
     /**
@@ -318,6 +319,7 @@ class PerformanceController(private val context: Context) {
             currentMode = mode
             perfManager.applyMode(mode)
             updateModeUI()
+            updatePerformanceUI()
             showModeChangeAnimation(mode)
     }
 
@@ -350,6 +352,7 @@ class PerformanceController(private val context: Context) {
         val btnBalanced = panelView.findViewById<TextView>(R.id.btn_balanced)
         val btnPerformance = panelView.findViewById<TextView>(R.id.btn_performance)
         val btnTurbo = panelView.findViewById<TextView>(R.id.btn_turbo)
+        val modeIndicator = panelView.findViewById<TextView>(R.id.mode_indicator)
 
         // Reset backgrounds
         btnPowerSaving.background = context.getDrawable(R.drawable.bg_mode_normal)
@@ -367,50 +370,37 @@ class PerformanceController(private val context: Context) {
             PerformanceMode.POWER_SAVING -> {
                 btnPowerSaving.background = context.getDrawable(R.drawable.bg_mode_selected)
                 btnPowerSaving.setTextColor(Color.parseColor("#00FFFF"))
-            }
-            PerformanceMode.BALANCED -> {
-                btnBalanced.background = context.getDrawable(R.drawable.bg_mode_selected)
-                btnBalanced.setTextColor(Color.parseColor("#00FF41"))
-            }
-            PerformanceMode.PERFORMANCE -> {
-                btnPerformance.background = context.getDrawable(R.drawable.bg_mode_selected)
-                btnPerformance.setTextColor(Color.parseColor("#FF00FF"))
-            }
-            PerformanceMode.TURBO -> {
-                btnTurbo.background = context.getDrawable(R.drawable.bg_mode_selected)
-                btnTurbo.setTextColor(Color.parseColor("#FFA500"))
-            }
-        }
-
-        updateModeIndicator()
-    }
-
-
-    private fun updateModeIndicator() {
-        val modeIndicator = panelView.findViewById<TextView>(R.id.mode_indicator)
-
-        when (currentMode) {
-            PerformanceMode.POWER_SAVING -> {
                 modeIndicator.text = "ECO"
                 modeIndicator.setTextColor(Color.parseColor("#00FFFF"))
             }
             PerformanceMode.BALANCED -> {
+                btnBalanced.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnBalanced.setTextColor(Color.parseColor("#00FF41"))
                 modeIndicator.text = "BALANCED"
                 modeIndicator.setTextColor(Color.parseColor("#00FF41"))
             }
             PerformanceMode.PERFORMANCE -> {
+                btnPerformance.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnPerformance.setTextColor(Color.parseColor("#FF00FF"))
                 modeIndicator.text = "PERF"
                 modeIndicator.setTextColor(Color.parseColor("#FF00FF"))
             }
             PerformanceMode.TURBO -> {
+                btnTurbo.background = context.getDrawable(R.drawable.bg_mode_selected)
+                btnTurbo.setTextColor(Color.parseColor("#FFA500"))
                 modeIndicator.text = "TURBO"
                 modeIndicator.setTextColor(Color.parseColor("#FFA500"))
             }
         }
+
     }
 
     private fun applyUserMode(mode: PerformanceMode) {
+        if (mode == currentMode) return
+
         setMode(mode)
+        perfManager.applyMode(mode)
+        updatePerformanceUI()
         showModePulse(mode)
     }
 
