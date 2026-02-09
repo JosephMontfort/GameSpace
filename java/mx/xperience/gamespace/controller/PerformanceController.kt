@@ -98,7 +98,7 @@ class PerformanceController(private val context: Context) {
         enableDrag(panelView)
         //bindPerformanceButtons(view)
 
-        windowParams = createOverlayParams(Gravity.TOP or Gravity.END, 20, 200)
+        windowParams = createOverlayParams(Gravity.START or Gravity.TOP, 10, 50)
         triggerWindowParams = createOverlayParams(Gravity.CENTER_VERTICAL or Gravity.START, 20, 0)
 
         btnEco.setOnClickListener {
