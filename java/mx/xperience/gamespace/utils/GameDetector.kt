@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2026 The XPerience Project
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * For some reason idk why the in game detection using
+ * Android apis arent working as expected so use this until i fix them
+ */
 package mx.xperience.gamespace.utils
 
 import android.content.Context

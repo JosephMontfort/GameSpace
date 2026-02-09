@@ -1,4 +1,6 @@
-// Android.bp para GameSpace (AOSP/Soong)
+// Copyright (C) 2026 The XPerience Project
+// SPDX-License-Identifier: Apache-2.0
+
 android_app {
     name: "GameSpace",
     platform_apis: true,
