@@ -9,8 +9,12 @@ import android.app.ActivityManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.graphics.PixelFormat
+import android.os.BatteryManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
@@ -38,6 +42,16 @@ class PerformanceController(private val context: Context) {
         PERFORMANCE,
         TURBO
     }
+
+    private data class BatteryStats(
+        val level: Int,
+        val status: Int,
+        val temperature: Int,
+        val voltage: Int,
+        val health: Int,
+        val plugged: Int,
+        val timeRemaining: Long
+    )
 
     private val handler = Handler(Looper.getMainLooper())
     private val perfManager = PerformanceManager(context)
@@ -138,6 +152,7 @@ class PerformanceController(private val context: Context) {
         if (pkg == currentGame) return
 
         currentGame = pkg
+        updateGameName(pkg)
         setMode(PerformanceMode.PERFORMANCE)
     }
 
@@ -149,6 +164,7 @@ class PerformanceController(private val context: Context) {
 
         fpsMonitor.stop()
         currentGame = null
+        panelView.findViewById<TextView>(R.id.game_name).text = ""
         setMode(PerformanceMode.BALANCED)
         stopFpsUpdates()
     }
@@ -173,6 +189,7 @@ class PerformanceController(private val context: Context) {
                 fpsText.text = "${fpsMonitor.getCurrentFps()} FPS"
                 updateWave()
                 updateRamUI()
+                updateBatteryInfo()
                 handler.postDelayed(this, 1000)
             }
         })
@@ -293,6 +310,20 @@ class PerformanceController(private val context: Context) {
 
                 else -> false
             }
+        }
+    }
+
+    private fun updateGameName(pkg: String) {
+        val gameNameView =
+        panelView.findViewById<TextView>(R.id.game_name)
+
+        try {
+            val pm = context.packageManager
+            val appInfo = pm.getApplicationInfo(pkg, 0)
+            val label = pm.getApplicationLabel(appInfo).toString()
+            gameNameView.text = label
+        } catch (_: Exception) {
+            gameNameView.text = pkg
         }
     }
 
@@ -418,6 +449,93 @@ class PerformanceController(private val context: Context) {
         borderAnimator.start()
     }
 
+    private fun getBatteryStats(): BatteryStats {
+        val batteryManager =
+        context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+
+        val level =
+        batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+        val intent = context.registerReceiver(
+            null,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        )
+
+        var status = BatteryManager.BATTERY_STATUS_UNKNOWN
+        var temperature = 0
+        var voltage = 0
+        var health = BatteryManager.BATTERY_HEALTH_UNKNOWN
+        var plugged = 0
+        var timeRemaining = -1L
+
+        intent?.let {
+            status = it.getIntExtra(
+                BatteryManager.EXTRA_STATUS,
+                BatteryManager.BATTERY_STATUS_UNKNOWN
+            )
+            temperature = it.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
+            voltage = it.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0)
+            health = it.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)
+            plugged = it.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
+            timeRemaining = batteryManager.computeChargeTimeRemaining()
+        }
+
+        return BatteryStats(
+            level,
+            status,
+            temperature,
+            voltage,
+            health,
+            plugged,
+            timeRemaining
+        )
+    }
+
+    private fun updateBatteryInfo() {
+        val batteryInfo =
+        panelView.findViewById<TextView>(R.id.battery_info)
+
+        val stats = getBatteryStats()
+
+        val text = buildString {
+            append("${stats.level}%")
+
+            when (stats.status) {
+                BatteryManager.BATTERY_STATUS_CHARGING -> {
+                    append(" ⚡")
+                    if (stats.timeRemaining > 0) {
+                        val h = stats.timeRemaining / 3600000
+                        val m = (stats.timeRemaining % 3600000) / 60000
+                        append(" ${h}h${m}m")
+                    }
+                }
+
+                BatteryManager.BATTERY_STATUS_DISCHARGING -> {
+                    if (stats.timeRemaining > 0) {
+                        val h = stats.timeRemaining / 3600000
+                        val m = (stats.timeRemaining % 3600000) / 60000
+                        append(" ${h}h${m}m")
+                    }
+                }
+
+                BatteryManager.BATTERY_STATUS_FULL -> append(" Full")
+                BatteryManager.BATTERY_STATUS_NOT_CHARGING -> append(" Not charging")
+                else -> append(" Unknown")
+            }
+        }
+
+        batteryInfo.text = text
+
+        val color = when {
+            stats.status == BatteryManager.BATTERY_STATUS_CHARGING ->
+            "#00FFFF"
+            stats.level >= 50 -> "#00FF41"
+            stats.level >= 20 -> "#FFA500"
+            else -> "#FF4500"
+        }
+
+        batteryInfo.setTextColor(Color.parseColor(color))
+    }
 
     private fun showModePulse(mode: PerformanceMode) {
         val panel = panelView.findViewById<View>(R.id.panel_background)
