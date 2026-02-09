@@ -5,7 +5,10 @@
 package mx.xperience.gamespace.sysfs
 
 import android.util.Log
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
+import java.io.RandomAccessFile
 
 /**
  * Simple SysFS writer utility.
@@ -31,5 +34,20 @@ object SysFsManager {
 
     fun writeLong(path: String, value: Long) {
         write(path, value.toString())
+    }
+
+    fun tryReadFileAsLong(path: String): Long {
+        return try {
+            val file = File(path)
+            if (file.exists() && file.canRead()) {
+                RandomAccessFile(file, "r").use { raf ->
+                    raf.readLine()?.trim()?.toLongOrNull() ?: 0L
+                }
+            } else {
+                0L
+            }
+        } catch (e: Exception) {
+            0L
+        }
     }
 }

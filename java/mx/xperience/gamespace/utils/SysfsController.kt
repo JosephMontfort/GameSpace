@@ -4,7 +4,12 @@
  */
 package mx.xperience.gamespace.utils
 
+import mx.xperience.gamespace.sysfs.SysFsManager
+
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
+import java.io.RandomAccessFile
 
 
 data class StockCpuState(
@@ -143,6 +148,62 @@ class SysfsController {
         }
     }
 
+    fun getMaxCpuLimit(): Long {
+        var maxLimit = 0L
+        for (i in 0..7) {
+            val path = "/sys/devices/system/cpu/cpu$i/cpufreq/cpuinfo_max_freq"
+            val file = File(path)
+            if (file.exists()) {
+                RandomAccessFile(path, "r").use { reader ->
+                    val freq = reader.readLine()?.trim()?.toLong() ?: 0L
+                    if (freq > maxLimit) maxLimit = freq
+                }
+            }
+        }
+        return maxLimit
+    }
+
+    fun getCurrentMaxFreqKHz(): Long {
+        var currentMax = 0L
+        for (i in 0..7) {
+            val path = "/sys/devices/system/cpu/cpu$i/cpufreq/scaling_cur_freq"
+            val file = File(path)
+            if (file.exists()) {
+                RandomAccessFile(path, "r").use { reader ->
+                    val freq = reader.readLine()?.trim()?.toLong() ?: 0L
+                    if (freq > currentMax) currentMax = freq
+                }
+            }
+        }
+        return currentMax
+    }
+
+    fun getCpuTemperature(): String {
+        return try {
+            // Leer temperatura de diferentes sensores
+            val tempPaths = arrayOf(
+                "/sys/class/thermal/thermal_zone0/temp",
+                "/sys/class/thermal/thermal_zone1/temp",
+                "/sys/devices/virtual/thermal/thermal_zone0/temp"
+            )
+
+            for (path in tempPaths) {
+                val file = File(path)
+                if (file.exists()) {
+                    RandomAccessFile(file, "r").use { reader ->
+                        val temp = reader.readLine()?.trim()?.toIntOrNull()
+                        temp?.let {
+                            return String.format("%.1f°C", it / 1000.0)
+                        }
+                    }
+                }
+            }
+            "N/A"
+        } catch (e: Exception) {
+            "N/A"
+        }
+    }
+
     /* ===================== UCLAMP ===================== */
 
     fun setUclamp(min: Int, max: Int) {
@@ -191,6 +252,84 @@ class SysfsController {
                 "/sys/class/kgsl/kgsl-3d0/force_clk_on",
                 if (enabled) "1" else "0"
             )
+        }
+    }
+
+     fun getGpuFreq(): Pair<Int, String> {
+        var freq = 0
+        var temp = "N/A"
+
+        val qcomFreqPaths = arrayOf(
+            "/sys/class/kgsl/kgsl-3d0/gpuclk",
+            "/sys/class/kgsl/kgsl-3d0/gpu_clock",
+            "/sys/class/kgsl/kgsl-3d0/devfreq/cur_freq"
+        )
+
+        val qcomTempPaths = arrayOf(
+            "/sys/class/kgsl/kgsl-3d0/temp",
+            "/sys/class/thermal/thermal_zone11/temp",
+            "/sys/class/thermal/thermal_zone12/temp"
+        )
+
+        // Buscar frecuencia - estilo compatible
+        for (path in qcomFreqPaths) {
+            val value = SysFsManager.tryReadFileAsLong(path)
+            if (value > 0) {
+                freq = (value / 1000000).toInt()
+                break
+            }
+        }
+
+        // Buscar temperatura
+        for (tPath in qcomTempPaths) {
+            val tempValue = SysFsManager.tryReadFileAsLong(tPath)
+            if (tempValue > 0) {
+                temp = String.format("%.1f°C", tempValue / 1000.0)
+                break
+            }
+        }
+
+        if (freq == 0) {
+            // Mali
+            val maliPaths = listOf(
+                "/sys/devices/platform/ffe40000.gpu/clock",
+                "/sys/devices/platform/gpu.0/clock",
+                "/sys/devices/platform/gpu/clock",
+                "/sys/class/misc/mali0/device/clock",
+                "/sys/devices/platform/14ac0000.mali/devfreq/14ac0000.mali/cur_freq"
+            )
+
+            for (path in maliPaths) {
+                val value = SysFsManager.tryReadFileAsLong(path)
+                if (value > 0) {
+                    freq = (value / 1000000).toInt()
+                    break
+                }
+            }
+        }
+
+        return Pair(freq, temp)
+    }
+
+    fun getGpuMaxFreqFromHardware(): Long {
+        return try {
+            val paths = arrayOf(
+                "/sys/class/kgsl/kgsl-3d0/max_gpuclk",
+                "/sys/devices/*.gpu/max_clock",
+                "/sys/class/misc/mali0/device/max_clock"
+            )
+
+            for (path in paths) {
+                val file = File(path)
+                if (file.exists()) {
+                    RandomAccessFile(file, "r").use { raf ->
+                        return raf.readLine()?.trim()?.toLongOrNull() ?: 0L
+                    }
+                }
+            }
+            0L
+        } catch (e: Exception) {
+            0L
         }
     }
 

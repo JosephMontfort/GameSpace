@@ -28,6 +28,8 @@ import androidx.cardview.widget.CardView
 import mx.xperience.gamespace.R
 import mx.xperience.gamespace.utils.FPSMonitor
 import mx.xperience.gamespace.utils.PerformanceManager
+import mx.xperience.gamespace.utils.SysfsController
+import mx.xperience.gamespace.view.WaveView
 
 /**
  * Controls performance modes, foreground detection and overlay updates.
@@ -61,7 +63,6 @@ class PerformanceController(private val context: Context) {
     private var currentMode = PerformanceMode.BALANCED
 
     private lateinit var fpsText: TextView
-    private lateinit var waveView: View
 
     lateinit var windowParams: WindowManager.LayoutParams
         private set
@@ -77,12 +78,16 @@ class PerformanceController(private val context: Context) {
     private lateinit var btnPerf: TextView
     private lateinit var btnTurbo: TextView
 
+    private val sysfsController = SysfsController()
+
+    //cpu variables
+    private var cpuMaxLimit: Long = 0L
+
     /**
      * Binds overlay UI and initializes window parameters.
      */
     fun bindOverlay(view: View) {
         fpsText = view.findViewById(R.id.fps_counter)
-        waveView = view.findViewById(R.id.cpu_chart)
         btnEco = view.findViewById(R.id.btn_power_saving)
         btnBalanced = view.findViewById(R.id.btn_balanced)
         btnPerf = view.findViewById(R.id.btn_performance)
@@ -186,8 +191,9 @@ class PerformanceController(private val context: Context) {
     private fun startFpsUpdates() {
         handler.post(object : Runnable {
             override fun run() {
+                cpuUpdateUI()
                 fpsText.text = "${fpsMonitor.getCurrentFps()} FPS"
-                updateWave()
+                gpuUpdateUI()
                 updateRamUI()
                 updateBatteryInfo()
                 handler.postDelayed(this, 1000)
@@ -197,13 +203,6 @@ class PerformanceController(private val context: Context) {
 
     private fun stopFpsUpdates() {
         handler.removeCallbacksAndMessages(null)
-    }
-
-    private fun updateWave() {
-        val usage = perfManager.getCpuUsage().coerceIn(0, 100)
-        val scale = 0.6f + (usage / 100f) * 0.6f
-        waveView.scaleX = scale
-        waveView.scaleY = scale
     }
 
     /**
@@ -260,6 +259,43 @@ class PerformanceController(private val context: Context) {
             percent > 75 -> ramPercent.setTextColor(Color.parseColor("#FFA500"))
             else -> ramPercent.setTextColor(Color.parseColor("#FFD700"))
         }
+    }
+
+    /* update GPU info overlay
+     *
+     */
+    private fun gpuUpdateUI(){
+        val gpuVal = panelView?.findViewById<TextView>(R.id.gpu_val)
+        val gpuTemp = panelView?.findViewById<TextView>(R.id.gpu_temp)
+        val gpuFreq = sysfsController.getGpuFreq()
+
+        gpuVal?.text = gpuFreq.first.toString() + " MHz"
+        gpuTemp?.text = gpuFreq.second
+
+        val gpuWave = panelView?.findViewById<WaveView>(R.id.gpu_chart)
+        gpuWave?.setWaveAmplitude((gpuFreq.first / 1000f).coerceIn(0.2f, 0.8f))
+        gpuWave?.setWaveColor(Color.parseColor("#f74a7b"))
+    }
+
+    /* update CPU info overlay
+     *
+     *
+     */
+    private fun cpuUpdateUI() {
+        if (cpuMaxLimit == 0L) cpuMaxLimit = sysfsController.getMaxCpuLimit()
+            val currentFreqKHz = sysfsController.getCurrentMaxFreqKHz()
+
+        val cpuVal = panelView?.findViewById<TextView>(R.id.cpu_val)
+        cpuVal?.text = String.format("%.2f", currentFreqKHz / 1000000.0) + " GHz"
+
+        val cpuTemp = panelView?.findViewById<TextView>(R.id.cpu_temp)
+        cpuTemp?.text = sysfsController.getCpuTemperature()
+
+        // Onda CPU
+        val cpuWave = panelView?.findViewById<WaveView>(R.id.cpu_chart)
+        val ratio = (currentFreqKHz.toFloat() / cpuMaxLimit.toFloat()).coerceIn(0.1f, 1.0f)
+        cpuWave?.setWaveAmplitude(ratio)
+        cpuWave?.setWaveColor(Color.parseColor("#4a9cf7"))
     }
 
     private fun createOverlayParams(
