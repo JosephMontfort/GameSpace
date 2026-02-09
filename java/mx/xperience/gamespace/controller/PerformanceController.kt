@@ -37,7 +37,7 @@ class PerformanceController(private val context: Context) {
 
     private val handler = Handler(Looper.getMainLooper())
     private val perfManager = PerformanceManager(context)
-    private val fpsMonitor = FPSMonitor(context)
+    private val fpsMonitor = FPSMonitor()
 
     private var currentGame: String? = null
     private var currentMode = PerformanceMode.BALANCED
@@ -78,17 +78,27 @@ class PerformanceController(private val context: Context) {
 
         //drag
         enableDrag(panelView)
-        bindPerformanceButtons(view)
+        //bindPerformanceButtons(view)
 
         windowParams = createOverlayParams(Gravity.TOP or Gravity.END, 20, 200)
         triggerWindowParams = createOverlayParams(Gravity.CENTER_VERTICAL or Gravity.START, 20, 0)
 
-        btnEco.setOnClickListener { onModeSelected(PerformanceMode.POWER_SAVING) }
-        btnBalanced.setOnClickListener { onModeSelected(PerformanceMode.BALANCED) }
-        btnPerf.setOnClickListener { onModeSelected(PerformanceMode.PERFORMANCE) }
-        btnTurbo.setOnClickListener { onModeSelected(PerformanceMode.TURBO) }
+        btnEco.setOnClickListener {
+            setMode(PerformanceMode.POWER_SAVING, true)
+        }
 
-        initPerformanceButtons()
+        btnBalanced.setOnClickListener {
+            setMode(PerformanceMode.BALANCED, true)
+        }
+
+        btnPerf.setOnClickListener {
+            setMode(PerformanceMode.PERFORMANCE, true)
+        }
+
+        btnTurbo.setOnClickListener {
+            setMode(PerformanceMode.TURBO, true)
+        }
+
     }
 
     /**
@@ -114,6 +124,7 @@ class PerformanceController(private val context: Context) {
     }
 
     fun onPanelOpened() {
+        fpsMonitor.start()
         startFpsUpdates()
     }
     /**
@@ -124,7 +135,6 @@ class PerformanceController(private val context: Context) {
 
         currentGame = pkg
         setMode(PerformanceMode.PERFORMANCE)
-        startFpsUpdates() //fix weird behaviour with fps
     }
 
     /**
@@ -133,6 +143,7 @@ class PerformanceController(private val context: Context) {
     fun onGameExit() {
         if (currentGame == null) return
 
+        fpsMonitor.stop()
         currentGame = null
         setMode(PerformanceMode.BALANCED)
         stopFpsUpdates()
@@ -141,7 +152,7 @@ class PerformanceController(private val context: Context) {
     /**
      * Applies a performance mode.
      */
-    private fun setMode(mode: PerformanceMode) {
+    private fun setMode(mode: PerformanceMode, fromUser: Boolean = false) {
         if (mode == currentMode) return
         currentMode = mode
         perfManager.applyMode(mode)
@@ -281,48 +292,6 @@ class PerformanceController(private val context: Context) {
         }
     }
 
-    private fun bindPerformanceButtons(view: View) {
-        view.findViewById<TextView>(R.id.btn_power_saving).setOnClickListener {
-            applyUserMode(PerformanceMode.POWER_SAVING)
-        }
-
-        view.findViewById<TextView>(R.id.btn_balanced).setOnClickListener {
-            applyUserMode(PerformanceMode.BALANCED)
-        }
-
-        view.findViewById<TextView>(R.id.btn_performance).setOnClickListener {
-            applyUserMode(PerformanceMode.PERFORMANCE)
-        }
-
-        view.findViewById<TextView>(R.id.btn_turbo).setOnClickListener {
-            applyUserMode(PerformanceMode.TURBO)
-        }
-    }
-
-    private fun initPerformanceButtons() {
-        val eco = panelView.findViewById<TextView>(R.id.btn_power_saving)
-        val balanced = panelView.findViewById<TextView>(R.id.btn_balanced)
-        val perf = panelView.findViewById<TextView>(R.id.btn_performance)
-        val turbo = panelView.findViewById<TextView>(R.id.btn_turbo)
-
-        eco.setOnClickListener { switchMode(PerformanceMode.POWER_SAVING) }
-        balanced.setOnClickListener { switchMode(PerformanceMode.BALANCED) }
-        perf.setOnClickListener { switchMode(PerformanceMode.PERFORMANCE) }
-        turbo.setOnClickListener { switchMode(PerformanceMode.TURBO) }
-
-        updateModeUI()
-    }
-
-    private fun switchMode(mode: PerformanceMode) {
-        if (mode == currentMode) return
-
-            currentMode = mode
-            perfManager.applyMode(mode)
-            updateModeUI()
-            updatePerformanceUI()
-            showModeChangeAnimation(mode)
-    }
-
     private fun updateModeUI() {
         val eco = panelView.findViewById<TextView>(R.id.btn_power_saving)
         val balanced = panelView.findViewById<TextView>(R.id.btn_balanced)
@@ -404,14 +373,6 @@ class PerformanceController(private val context: Context) {
         showModePulse(mode)
     }
 
-    private fun onModeSelected(mode: PerformanceMode) {
-        if (mode == currentMode) return
-
-            setMode(mode)
-            updatePerformanceUI()
-            showModeChangeAnimation(mode)
-    }
-
     private fun showModeChangeAnimation(mode: PerformanceMode) {
         val panelBackground =
         panelView.findViewById<androidx.cardview.widget.CardView>(R.id.panel_background)
@@ -477,6 +438,4 @@ class PerformanceController(private val context: Context) {
         }
         .start()
     }
-
-
 }

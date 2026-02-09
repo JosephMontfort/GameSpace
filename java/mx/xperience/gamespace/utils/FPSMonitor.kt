@@ -1,48 +1,81 @@
 package mx.xperience.gamespace.utils
 
-import android.content.Context
 import android.view.Choreographer
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.roundToInt
 
-/**
- * FPS monitor using kernel sysfs and Choreographer fallback.
- */
-class FPSMonitor(context: Context) {
+class FPSMonitor {
 
-    private val fpsValue = AtomicInteger(0)
+    private val advancedFpsPath =
+    "/sys/class/drm/sde-crtc-0/measured_fps"
 
-    private val fpsPaths = arrayOf(
-        "/sys/class/drm/card0/sde_crtc_fps",
-        "/sys/class/graphics/fb0/fps"
+    // === Fallbacks ===
+    private val fallbackPaths = arrayOf(
+        "/sys/class/graphics/fb0/fps",
+        "/sys/class/drm/card0/sde_crtc_fps"
     )
 
-    init {
-        Choreographer.getInstance().postFrameCallback(object :
-        Choreographer.FrameCallback {
-            override fun doFrame(frameTimeNanos: Long) {
-                fpsValue.incrementAndGet()
-                Choreographer.getInstance().postFrameCallback(this)
-            }
-        })
-    }
+    // === Choreographer fallback ===
+    private var lastFrameTimeNs = 0L
+    private var frameCount = 0
+    private var choreoFps = 60
 
-    fun getCurrentFps(): Int {
-        readKernelFps()?.let { return it }
-        val fps = fpsValue.getAndSet(0)
-        return if (fps > 0) fps else 60
-    }
+    private val frameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            if (lastFrameTimeNs > 0) {
+                frameCount++
+                val delta = frameTimeNanos - lastFrameTimeNs
 
-    private fun readKernelFps(): Int? {
-        for (path in fpsPaths) {
-            try {
-                val file = File(path)
-                if (file.exists()) {
-                    return file.readText().trim().toInt()
+                if (delta >= 1_000_000_000L) {
+                    val fps =
+                    (frameCount * 1_000_000_000.0 / delta).roundToInt()
+
+                    choreoFps = fps.coerceIn(30, 240)
+
+                    frameCount = 0
+                    lastFrameTimeNs = frameTimeNanos
                 }
-            } catch (_: Exception) {
+            } else {
+                lastFrameTimeNs = frameTimeNanos
             }
+
+            Choreographer.getInstance().postFrameCallback(this)
         }
-        return null
+    }
+
+    fun start() {
+        lastFrameTimeNs = 0
+        frameCount = 0
+        Choreographer.getInstance().postFrameCallback(frameCallback)
+    }
+
+    fun stop() {
+        Choreographer.getInstance().removeFrameCallback(frameCallback)
+    }
+
+    /**
+     * Returns REAL FPS.
+     * Priority: Advanced sysfs → fallback sysfs → Choreographer.
+     */
+    fun getCurrentFps(): Int {
+        readFps(advancedFpsPath)?.let { return it }
+
+        for (path in fallbackPaths) {
+            readFps(path)?.let { return it }
+        }
+
+        return choreoFps
+    }
+
+    private fun readFps(path: String): Int? {
+        return try {
+            val file = File(path)
+            if (!file.exists()) return null
+
+                val value = file.readText().trim().toFloat().roundToInt()
+                if (value in 10..240) value else null
+        } catch (_: Exception) {
+            null
+        }
     }
 }

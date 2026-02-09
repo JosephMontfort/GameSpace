@@ -24,12 +24,6 @@ class PerformanceManager(private val context: Context) {
      * Applies low-level optimizations for a given mode.
      */
     fun applyMode(mode: PerformanceMode) {
-        /*when (mode) {
-            PerformanceMode.POWER_SAVING -> setGaming(false)
-            PerformanceMode.BALANCED -> setGaming(false)
-            PerformanceMode.PERFORMANCE -> setGaming(true)
-            PerformanceMode.TURBO -> setGaming(true)
-        }*/
         when (mode) {
             PerformanceMode.POWER_SAVING -> {
                 sysfs.applyEco()
