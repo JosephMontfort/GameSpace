@@ -10,13 +10,14 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
 import mx.xperience.gamespace.controller.PerformanceController
-import mx.xperience.gamespace.utils.GameDetector
 
 /**
  * Main GameSpace foreground service.
@@ -29,14 +30,12 @@ class GameSpaceService : Service() {
     private lateinit var triggerView: View
 
     private lateinit var controller: PerformanceController
-    private lateinit var gameDetector: GameDetector
 
     override fun onCreate() {
         super.onCreate()
 
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         controller = PerformanceController(this)
-        gameDetector = GameDetector(this)
 
         controller.onRequestShowTrigger = { showTrigger() }
 
@@ -47,17 +46,25 @@ class GameSpaceService : Service() {
         initTrigger()
 
         controller.startForegroundMonitoring { packageName ->
-            if (gameDetector.isGame(packageName)) {
+            if (isPackageAGame(packageName)) {
                 controller.onGameEnter(packageName)
                 triggerView.visibility = View.VISIBLE
             } else {
                 controller.onGameExit()
                 triggerView.visibility = View.GONE
                 overlayView.visibility = View.GONE
-                controller.onGameExit()
             }
         }
 
+    }
+
+    private fun isPackageAGame(packageName: String): Boolean {
+        return try {
+            val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            appInfo.category == ApplicationInfo.CATEGORY_GAME || (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+        } catch (e: Exception) {
+            false
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -144,7 +151,7 @@ class GameSpaceService : Service() {
     private fun buildNotification(): Notification {
         return Notification.Builder(this, "gamespace")
             .setContentTitle("GameSpace")
-            .setContentText("Running")
+            .setContentText("Engine Active")
             .setSmallIcon(R.drawable.ic_game_controller)
             .build()
     }
