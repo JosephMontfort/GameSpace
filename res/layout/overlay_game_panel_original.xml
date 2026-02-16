@@ -5,22 +5,18 @@
  -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@android:color/transparent">
-
-    <View
-        android:id="@+id/outside_touch"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/transparent" />
 
     <!-- Fondo con blur y gradiente gaming - TAMAÑO FIJO -->
     <androidx.cardview.widget.CardView
         android:id="@+id/panel_background"
         android:layout_width="350dp"
         android:layout_height="340dp"
+        android:layout_gravity="top|end"
         app:cardBackgroundColor="@android:color/transparent"
+        android:layout_marginEnd="24dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="8dp"
         android:layout_margin="8dp">

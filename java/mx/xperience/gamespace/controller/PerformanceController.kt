@@ -11,6 +11,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.BatteryManager
@@ -18,7 +19,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.ProgressBar
@@ -70,7 +73,7 @@ class PerformanceController(private val context: Context) {
         private set
 
     lateinit var triggerWindowParams: WindowManager.LayoutParams
-        private set
+ //       private set
 
     private lateinit var panelView: View
 
@@ -81,6 +84,10 @@ class PerformanceController(private val context: Context) {
     private lateinit var btnTurbo: TextView
 
     private val sysfsController = SysfsController()
+
+    private val prefs: SharedPreferences by lazy {
+        context.getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+    }
 
     //cpu variables
     private var cpuMaxLimit: Long = 0L
@@ -97,19 +104,24 @@ class PerformanceController(private val context: Context) {
         btnPerf = view.findViewById(R.id.btn_performance)
         btnTurbo = view.findViewById(R.id.btn_turbo)
         panelView = view
-        //touch outside
-        view.findViewById<View>(R.id.outside_touch).setOnClickListener {
-            panelView.visibility = View.GONE
-            onRequestShowTrigger?.invoke()
-        }
-
 
         //drag
-        enableDrag(panelView)
+        //enableDrag(panelView)
         //bindPerformanceButtons(view)
 
-        windowParams = createOverlayParams(Gravity.START or Gravity.TOP, 10, 50)
-        triggerWindowParams = createOverlayParams(Gravity.CENTER_VERTICAL or Gravity.START, 20, 0)
+        //windowParams = createOverlayParams(Gravity.END or Gravity.TOP, 24, 0)
+        windowParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.LEFT
+            x = 24
+            y = 50
+        }
 
         btnEco.setOnClickListener {
             setMode(PerformanceMode.POWER_SAVING, true)
@@ -126,6 +138,7 @@ class PerformanceController(private val context: Context) {
         btnTurbo.setOnClickListener {
             setMode(PerformanceMode.TURBO, true)
         }
+
     }
 
     /**
@@ -307,16 +320,23 @@ class PerformanceController(private val context: Context) {
         x: Int,
         y: Int
     ): WindowManager.LayoutParams {
+        val flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or // So that it is well positioned with respect to the edges
+        WindowManager.LayoutParams.FLAG_BLUR_BEHIND    // The blur effect
+
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            flags,
             PixelFormat.TRANSLUCENT
         ).apply {
             this.gravity = gravity
             this.x = x
             this.y = y
+            // Blur intensity. 25 is an elegant value and does not consume extra resources.
+            this.blurBehindRadius = 25
+
         }
     }
 
@@ -575,6 +595,92 @@ class PerformanceController(private val context: Context) {
         }
 
         batteryInfo.setTextColor(Color.parseColor(color))
+    }
+
+    fun createTriggerParams(): WindowManager.LayoutParams {
+        val displayMetrics = context.resources.displayMetrics
+        val defaultY = (200 * displayMetrics.density).toInt() // 200dp desde arriba
+        val viewSize = (48 * displayMetrics.density).toInt()  // tamaño del trigger
+
+        // Para el lado derecho, queremos que la posición guardada sea la distancia desde el borde derecho.
+        // Si no hay guardado, usamos 0 (pegado a la derecha).
+        val savedX = prefs.getInt("trigger_x", 0)  // 0 = pegado a la derecha
+        val savedY = prefs.getInt("trigger_y", defaultY)
+
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        // Con gravity END, x es la distancia desde el borde derecho:
+        // - 0 = pegado a la derecha
+        // - máximo = screenWidth - viewSize (llegaría al borde izquierdo)
+        val clampedX = savedX.coerceIn(0, screenWidth - viewSize)
+        val clampedY = savedY.coerceIn(0, screenHeight - viewSize)
+
+        return createOverlayParams(Gravity.END or Gravity.TOP, clampedX, clampedY).apply {
+            flags = flags and WindowManager.LayoutParams.FLAG_BLUR_BEHIND.inv()
+            blurBehindRadius = 0
+        }
+    }
+
+    fun enableTriggerDrag(triggerView: View, windowManager: WindowManager) {
+        var initialX = 0
+        var initialY = 0
+        var initialTouchX = 0f
+        var initialTouchY = 0f
+        var isDragging = false
+        val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        triggerView.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    initialX = triggerWindowParams.x
+                    initialY = triggerWindowParams.y
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                    isDragging = false
+                    false // No consumimos, permitimos que otros listeners vean el evento
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = event.rawX - initialTouchX
+                    val dy = event.rawY - initialTouchY
+                    if (!isDragging && (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop)) {
+                        isDragging = true
+                    }
+                    if (isDragging) {
+                        val newX = (initialX + dx).toInt()
+                        val newY = (initialY + dy).toInt()
+                        val viewWidth = triggerView.width
+                        val viewHeight = triggerView.height
+                        val clampedX = newX.coerceIn(0, screenWidth - viewWidth)
+                        val clampedY = newY.coerceIn(0, screenHeight - viewHeight)
+                        triggerWindowParams.x = clampedX
+                        triggerWindowParams.y = clampedY
+                        windowManager.updateViewLayout(triggerView, triggerWindowParams)
+                        true // Consumimos mientras arrastramos
+                    } else {
+                        false // Aún no es arrastre, no consumir
+                    }
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    if (isDragging) {
+                        // Guardar posición final
+                        prefs.edit().apply {
+                            putInt("trigger_x", triggerWindowParams.x)
+                            putInt("trigger_y", triggerWindowParams.y)
+                            apply()
+                        }
+                        true // Consumir porque fue un drag
+                    } else {
+                        false // No fue drag, permitir que el click se ejecute
+                    }
+                }
+                else -> false
+            }
+        }
     }
 
     private fun showModePulse(mode: PerformanceMode) {

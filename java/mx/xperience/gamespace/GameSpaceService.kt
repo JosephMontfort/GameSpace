@@ -15,6 +15,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.IBinder
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import mx.xperience.gamespace.controller.PerformanceController
@@ -48,7 +49,9 @@ class GameSpaceService : Service() {
         controller.startForegroundMonitoring { packageName ->
             if (isPackageAGame(packageName)) {
                 controller.onGameEnter(packageName)
-                triggerView.visibility = View.VISIBLE
+                if (overlayView.visibility != View.VISIBLE) {
+                    triggerView.visibility = View.VISIBLE
+                }
             } else {
                 controller.onGameExit()
                 triggerView.visibility = View.GONE
@@ -74,21 +77,31 @@ class GameSpaceService : Service() {
      */
     private fun initOverlay() {
         overlayView = LayoutInflater.from(this)
-            .inflate(R.layout.overlay_game_panel_original, null)
+        .inflate(R.layout.overlay_game_panel_original, null)
 
         controller.bindOverlay(overlayView)
         windowManager.addView(overlayView, controller.windowParams)
 
-        // Root captures outside touches
-        overlayView.setOnClickListener {
-            overlayView.visibility = View.GONE
-            triggerView.visibility = View.VISIBLE
-        }
+        overlayView.setOnTouchListener { v, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val panelBackground = overlayView.findViewById<View>(R.id.panel_background)
+                val location = IntArray(2)
+                panelBackground.getLocationOnScreen(location)
+                val panelRect = android.graphics.Rect(
+                    location[0],
+                    location[1],
+                    location[0] + panelBackground.width,
+                    location[1] + panelBackground.height
+                )
 
-        // Prevent clicks inside panel from closing it
-        overlayView.findViewById<View>(R.id.panel_background)
-        ?.setOnClickListener {
-            // Consume click, do nothing
+                if (!panelRect.contains(event.rawX.toInt(), event.rawY.toInt())) {
+                    // Toque fuera del panel → cerrar
+                    overlayView.visibility = View.GONE
+                    triggerView.visibility = View.VISIBLE
+                    return@setOnTouchListener true
+                }
+            }
+            false
         }
 
         overlayView.visibility = View.GONE
@@ -101,6 +114,9 @@ class GameSpaceService : Service() {
         triggerView = LayoutInflater.from(this)
             .inflate(R.layout.overlay_game_trigger, null)
 
+        // Crear parámetros con la posición guardada
+       // triggerWindowParams = controller.createTriggerParams()
+        controller.triggerWindowParams = controller.createTriggerParams()
         windowManager.addView(triggerView, controller.triggerWindowParams)
         triggerView.visibility = View.GONE
 
@@ -109,6 +125,8 @@ class GameSpaceService : Service() {
             triggerView.visibility = View.GONE
             controller.onPanelOpened()
         }
+
+        controller.enableTriggerDrag(triggerView, windowManager)
 
     }
 
