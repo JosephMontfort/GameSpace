@@ -20,12 +20,14 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 
 import androidx.cardview.widget.CardView
 
 import mx.xperience.gamespace.R
+import mx.xperience.gamespace.services.StatOverlayService
 import mx.xperience.gamespace.utils.FPSMonitor
 import mx.xperience.gamespace.utils.PerformanceManager
 import mx.xperience.gamespace.utils.SysfsController
@@ -83,6 +85,8 @@ class PerformanceController(private val context: Context) {
     //cpu variables
     private var cpuMaxLimit: Long = 0L
 
+    private var statsActive = false
+
     /**
      * Binds overlay UI and initializes window parameters.
      */
@@ -92,11 +96,20 @@ class PerformanceController(private val context: Context) {
         btnBalanced = view.findViewById(R.id.btn_balanced)
         btnPerf = view.findViewById(R.id.btn_performance)
         btnTurbo = view.findViewById(R.id.btn_turbo)
+        val btnStats = view.findViewById<TextView>(R.id.btn_stats_toggle)
         panelView = view
         //touch outside
         view.findViewById<View>(R.id.outside_touch).setOnClickListener {
             panelView.visibility = View.GONE
             onRequestShowTrigger?.invoke()
+        }
+
+        if (statsActive) {
+            btnStats.text = "Hide Stats"
+            btnStats.setTextColor(Color.parseColor("#00FF41"))
+        } else {
+            btnStats.text = "Show Stats"
+            btnStats.setTextColor(Color.WHITE)
         }
 
         //drag
@@ -120,6 +133,21 @@ class PerformanceController(private val context: Context) {
 
         btnTurbo.setOnClickListener {
             setMode(PerformanceMode.TURBO, true)
+        }
+
+        btnStats.setOnClickListener {
+            statsActive = !statsActive
+            val intent = Intent(context, StatOverlayService::class.java)
+
+            if (statsActive) {
+                context.startForegroundService(intent)
+                btnStats.text = "Hide Stats"
+                btnStats.setTextColor(Color.parseColor("#00FF41"))
+            } else {
+                context.stopService(intent)
+                btnStats.text = "Show Stats"
+                btnStats.setTextColor(Color.WHITE)
+            }
         }
 
     }

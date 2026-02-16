@@ -48,19 +48,19 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupGameGrid() {
         val recyclerView = findViewById<RecyclerView>(R.id.game_recycler_view)
-        recyclerView.layoutManager = GridLayoutManager(this, 3) // Mosaico de 3 columnas
+        recyclerView.layoutManager = GridLayoutManager(this, 3) // 3-column mosaic
 
         val pm = packageManager
         val myPackageName = packageName
 
-        // Filtramos apps que el sistema reconoce como juegos
+        // We filter apps that the system recognises as games.
         val games = pm.getInstalledApplications(PackageManager.GET_META_DATA)
         .filter { appInfo ->
-            // Condición 1: Que el sistema diga que es un juego
+            // Condition 1: The system must indicate that it is a game.
             val isGame = appInfo.category == ApplicationInfo.CATEGORY_GAME ||
             (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
 
-            // Condición 2: ¡Que NO sea esta misma app!
+            // Condition 2: It must NOT be this same app!
             val isNotMe = appInfo.packageName != myPackageName
 
             isGame && isNotMe
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
             showOptimizationToast(pkg)
 
-            // Usamos la API de AOSP para poner el kernel en modo alto rendimiento
+            // We use the AOSP API to put the kernel into high-performance mode.
             val gameManager = getSystemService(Context.GAME_SERVICE) as GameManager
             gameManager.setGameMode(pkg, GameManager.GAME_MODE_PERFORMANCE)
 
@@ -161,7 +161,9 @@ class MainActivity : AppCompatActivity() {
             // Tensor G1 (Pixel 6 / 6a)
             board == "oriole" || board == "raven" || board == "bluejay" || hardware.contains("whitechapel") -> "Cortex-X1"
 
-            // Fallback: Si no es un board conocido, intentamos buscar en /proc/cpuinfo
+            // Fallback: If it is not a known board, we try searching in /proc/cpuinfo,
+            // although it is likely that we will never find anything,
+            // but we will never know if this works.
             else -> searchInCpuInfo()
         }
     }

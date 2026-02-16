@@ -9,7 +9,7 @@
     android:id="@+id/main_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212">
+   android:background="@drawable/main_background_gradient">
 
     <TextView
         android:id="@+id/main_title"

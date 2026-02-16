@@ -428,6 +428,22 @@
                             android:textSize="10sp" />
 
                         <TextView
+                            android:id="@+id/btn_stats_toggle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="22dp"
+                            android:layout_marginEnd="8dp"
+                            android:background="@drawable/bg_button_stats"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:gravity="center"
+                            android:paddingHorizontal="10dp"
+                            android:text="STATS"
+                            android:textAllCaps="true"
+                            android:textColor="#FFFFFF"
+                            android:textSize="8sp"
+                            android:fontFamily="monospace" />
+
+                        <TextView
                             android:id="@+id/battery_info"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
