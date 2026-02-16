@@ -96,7 +96,6 @@ class PerformanceController(private val context: Context) {
         btnBalanced = view.findViewById(R.id.btn_balanced)
         btnPerf = view.findViewById(R.id.btn_performance)
         btnTurbo = view.findViewById(R.id.btn_turbo)
-        val btnStats = view.findViewById<TextView>(R.id.btn_stats_toggle)
         panelView = view
         //touch outside
         view.findViewById<View>(R.id.outside_touch).setOnClickListener {
@@ -104,13 +103,6 @@ class PerformanceController(private val context: Context) {
             onRequestShowTrigger?.invoke()
         }
 
-        if (statsActive) {
-            btnStats.text = "Hide Stats"
-            btnStats.setTextColor(Color.parseColor("#00FF41"))
-        } else {
-            btnStats.text = "Show Stats"
-            btnStats.setTextColor(Color.WHITE)
-        }
 
         //drag
         enableDrag(panelView)
@@ -134,22 +126,6 @@ class PerformanceController(private val context: Context) {
         btnTurbo.setOnClickListener {
             setMode(PerformanceMode.TURBO, true)
         }
-
-        btnStats.setOnClickListener {
-            statsActive = !statsActive
-            val intent = Intent(context, StatOverlayService::class.java)
-
-            if (statsActive) {
-                context.startForegroundService(intent)
-                btnStats.text = "Hide Stats"
-                btnStats.setTextColor(Color.parseColor("#00FF41"))
-            } else {
-                context.stopService(intent)
-                btnStats.text = "Show Stats"
-                btnStats.setTextColor(Color.WHITE)
-            }
-        }
-
     }
 
     /**

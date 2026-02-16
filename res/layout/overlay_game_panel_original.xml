@@ -427,7 +427,7 @@
                             android:textColor="#FFFFFF"
                             android:textSize="10sp" />
 
-                        <TextView
+                        <!--<TextView
                             android:id="@+id/btn_stats_toggle"
                             android:layout_width="wrap_content"
                             android:layout_height="22dp"
@@ -441,7 +441,7 @@
                             android:textAllCaps="true"
                             android:textColor="#FFFFFF"
                             android:textSize="8sp"
-                            android:fontFamily="monospace" />
+                            android:fontFamily="monospace" />-->
 
                         <TextView
                             android:id="@+id/battery_info"
