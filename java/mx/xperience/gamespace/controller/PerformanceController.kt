@@ -86,7 +86,8 @@ class PerformanceController(private val context: Context) {
     private val sysfsController = SysfsController()
 
     private val prefs: SharedPreferences by lazy {
-        context.getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+        val directBootContext = context.createDeviceProtectedStorageContext()
+        directBootContext.getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
     }
 
     //cpu variables
