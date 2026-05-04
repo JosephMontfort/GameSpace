@@ -523,6 +523,7 @@ class PerformanceController(private val context: Context) {
         )
 
         var status = BatteryManager.BATTERY_STATUS_UNKNOWN
+        var rawTemp = 0
         var temperature = 0
         var voltage = 0
         var health = BatteryManager.BATTERY_HEALTH_UNKNOWN
@@ -534,7 +535,8 @@ class PerformanceController(private val context: Context) {
                 BatteryManager.EXTRA_STATUS,
                 BatteryManager.BATTERY_STATUS_UNKNOWN
             )
-            temperature = it.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
+            rawTemp = it.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0)
+            temperature = rawTemp / 10
             voltage = it.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0)
             health = it.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)
             plugged = it.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0)
