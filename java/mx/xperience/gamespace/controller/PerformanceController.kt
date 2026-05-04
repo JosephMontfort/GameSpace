@@ -559,6 +559,9 @@ class PerformanceController(private val context: Context) {
         val stats = getBatteryStats()
 
         val text = buildString {
+            // temp
+            append("${stats.temperature}°C\n")
+            //battery level 
             append("${stats.level}%")
 
             when (stats.status) {

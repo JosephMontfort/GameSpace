@@ -421,7 +421,8 @@
                             android:maxLines="1"
                             android:text="Endfield"
                             android:textColor="#FFFFFF"
-                            android:textSize="10sp" />
+                            android:textSize="10sp"
+                            android:layout_marginEnd="8dp" />
 
                         <!--<TextView
                             android:id="@+id/btn_stats_toggle"
@@ -444,9 +445,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:drawableStart="@drawable/ic_battery"
-                            android:drawablePadding="3dp"
+                            android:drawablePadding="4dp"
                             android:fontFamily="monospace"
-                            android:text="45% 26m"
+                            android:gravity="end|center_vertical"
+                            android:text="35.5°C 72% ⚡ 2h30m"
                             android:textColor="#00FF41"
                             android:textSize="9sp" />
                     </LinearLayout>
