@@ -53,17 +53,22 @@ class MainActivity : AppCompatActivity() {
         val pm = packageManager
         val myPackageName = packageName
 
+        val manualGames = getManualGames()
+
         // We filter apps that the system recognises as games.
         val games = pm.getInstalledApplications(PackageManager.GET_META_DATA)
         .filter { appInfo ->
             // Condition 1: The system must indicate that it is a game.
             val isGame = appInfo.category == ApplicationInfo.CATEGORY_GAME ||
-            (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+                        (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
 
-            // Condition 2: It must NOT be this same app!
+            // condition 2: was manually added
+            val isManual = manualGames.contains(appInfo.packageName)
+
+            // Condition 3: It must NOT be this same app!
             val isNotMe = appInfo.packageName != myPackageName
 
-            isGame && isNotMe
+            (isGame || isManual) && isNotMe
         }
         .map { appInfo ->
             GameModel(
@@ -73,7 +78,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        recyclerView.adapter = GameAdapter(games) { pkg ->
+       val adapter = GameAdapter(games.toMutableList(), { pkg ->
 
             showOptimizationToast(pkg)
 
@@ -85,7 +90,12 @@ class MainActivity : AppCompatActivity() {
                 val launchIntent = pm.getLaunchIntentForPackage(pkg)
                 launchIntent?.let { startActivity(it) }
             }, 500)
+        }) {
+            Toast.makeText(this, "Opening App Picker...", Toast.LENGTH_SHORT).show()
+            showAddGameDialog()
         }
+
+        recyclerView.adapter = adapter
     }
 
     private fun showOptimizationToast(packageName: String = "") {
@@ -181,4 +191,49 @@ class MainActivity : AppCompatActivity() {
             "Unknown CPU"
         }
     }
+
+    private fun getManualGames(): Set<String> {
+        val prefs = getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+        return prefs.getStringSet("manual_games", emptySet()) ?: emptySet()
+    }
+
+    private fun addManualGame(packageName: String) {
+        val prefs = getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+        val currentGames = getManualGames().toMutableSet()
+        currentGames.add(packageName)
+        prefs.edit().putStringSet("manual_games", currentGames).apply()
+    }
+
+    private fun showAddGameDialog() {
+        val pm = packageManager
+        val manualGames = getManualGames()
+        
+        // Obtenemos todas las apps instaladas que se pueden abrir (que tienen ícono en el launcher)
+        val availableApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            .filter { app ->
+                val pkg = app.packageName
+                // Que no sea GameSpace, que se pueda lanzar y que no esté ya añadida
+                pkg != packageName && 
+                pm.getLaunchIntentForPackage(pkg) != null && 
+                !manualGames.contains(pkg)
+            }
+            .sortedBy { pm.getApplicationLabel(it).toString().lowercase() } // Orden alfabético
+
+        // Nombres para mostrar en la lista
+        val appNames = availableApps.map { pm.getApplicationLabel(it).toString() }.toTypedArray()
+
+        // Mostramos un diálogo nativo del sistema
+        android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Select App to Add")
+            .setItems(appNames) { _, which ->
+                val selectedApp = availableApps[which]
+                addManualGame(selectedApp.packageName)
+                
+                // Recargamos la lista para que aparezca el nuevo juego
+                setupGameGrid() 
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
 }
