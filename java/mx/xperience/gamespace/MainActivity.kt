@@ -90,6 +90,14 @@ class MainActivity : AppCompatActivity() {
                 val launchIntent = pm.getLaunchIntentForPackage(pkg)
                 launchIntent?.let { startActivity(it) }
             }, 500)
+       }, { pkg ->
+           // (onLongClick) NUEVO: Verifica si es manual antes de intentar borrar
+           val manualGames = getManualGames()
+           if (manualGames.contains(pkg)) {
+               showRemoveDialog(pkg)
+           } else {
+               Toast.makeText(this, "System games cannot be removed", Toast.LENGTH_SHORT).show()
+           }
         }) {
             Toast.makeText(this, "Opening App Picker...", Toast.LENGTH_SHORT).show()
             showAddGameDialog()
@@ -199,9 +207,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun addManualGame(packageName: String) {
         val prefs = getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
-        val currentGames = getManualGames().toMutableSet()
+
+        //clone the list to avoid reference problems
+        val currentGames = prefs.getStringSet("manual_games", emptySet())?.toMutableSet() ?: mutableSetOf()
         currentGames.add(packageName)
-        prefs.edit().putStringSet("manual_games", currentGames).apply()
+
+        // use commit instead of apply (originally we used apply)
+        // so that the save is immediate and synchronous
+        prefs.edit().putStringSet("manual_games", currentGames).commit()
+
+        //refresh the service
+        restartGameSpaceService()
     }
 
     private fun showAddGameDialog() {
@@ -217,15 +233,40 @@ class MainActivity : AppCompatActivity() {
                 pm.getLaunchIntentForPackage(pkg) != null && 
                 !manualGames.contains(pkg)
             }
-            .sortedBy { pm.getApplicationLabel(it).toString().lowercase() } // Orden alfabético
+            .map { app ->
+                GameModel(
+                    name = pm.getApplicationLabel(app).toString(),
+                    packageName = app.packageName,
+                    icon = pm.getApplicationIcon(app)
+                )
+            }
+            .sortedBy { it.name.lowercase() } // Orden alfabético
 
         // Nombres para mostrar en la lista
-        val appNames = availableApps.map { pm.getApplicationLabel(it).toString() }.toTypedArray()
+        //val appNames = availableApps.map { pm.getApplicationLabel(it).toString() }.toTypedArray()
+        val adapter = object : android.widget.ArrayAdapter<GameModel>(
+            this,
+            R.layout.item_app_picker,
+            availableApps
+        ) {
+            override fun getView(position: Int, convertView: android.view.View?,parent: android.view.ViewGroup): android.view.View {
+                val view = convertView ?: layoutInflater.inflate(R.layout.item_app_picker, parent, false)
+                val item = getItem(position)!!
+
+                val iconView = view.findViewById<android.widget.ImageView>(R.id.app_icon)
+                val nameView = view.findViewById<android.widget.TextView>(R.id.app_name)
+
+                iconView.setImageDrawable(item.icon)
+                nameView.text = item.name
+
+                return view
+            }
+        }
 
         // Mostramos un diálogo nativo del sistema
-        android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        android.app.AlertDialog.Builder(this, android.app.AlertDialog.THEME_DEVICE_DEFAULT_DARK)
             .setTitle("Select App to Add")
-            .setItems(appNames) { _, which ->
+            .setAdapter(adapter) { _, which ->
                 val selectedApp = availableApps[which]
                 addManualGame(selectedApp.packageName)
                 
@@ -234,6 +275,39 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun removeManualGame(packageName: String) {
+        val prefs = getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+        val currentGames = getManualGames().toMutableSet()
+
+        if (currentGames.contains(packageName)) {
+            currentGames.remove(packageName)
+            prefs.edit().putStringSet("manual_games", currentGames).commit()
+            setupGameGrid() // Recargar la vista
+            Toast.makeText(this, "Game removed", Toast.LENGTH_SHORT).show()
+        }
+
+        restartGameSpaceService()
+    }
+
+    private fun showRemoveDialog(packageName: String) {
+        android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        .setTitle("Remove Game")
+        .setMessage("Do you want to remove this app from GameSpace?")
+        .setPositiveButton("Remove") { _, _ ->
+            removeManualGame(packageName)
+        }
+        .setNegativeButton("Cancel", null)
+        .show()
+    }
+
+    private fun restartGameSpaceService() {
+        val serviceIntent = Intent(this, GameSpaceService::class.java)
+
+        stopService(serviceIntent)
+
+        startService(serviceIntent)
     }
 
 }

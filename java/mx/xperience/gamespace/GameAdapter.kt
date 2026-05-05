@@ -17,6 +17,7 @@ import com.google.android.material.card.MaterialCardView
 class GameAdapter(
     private val games: MutableList<GameModel>,
         private val onClick: (String) -> Unit,
+        private val onLongClick: (String) -> Unit,
         private val onAddClick: () -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -47,6 +48,13 @@ class GameAdapter(
             holder.icon.setImageDrawable(game.icon)
             holder.name.text = game.name
             holder.itemView.setOnClickListener { onClick(game.packageName) }
+
+            // LongClick to delete
+            holder.itemView.setOnLongClickListener {
+                onLongClick(game.packageName)
+                true
+            }
+
         } else if (holder is AddViewHolder) {
             // Configuramos el look de "Añadir"
             holder.name.text = "Add Game"
@@ -74,9 +82,3 @@ class GameAdapter(
         val name: TextView = view.findViewById(R.id.game_name)
     }
 }
-
-/*data class GameModel(
-    val name: String,
-    val packageName: String,
-    val icon: Drawable
-)*/

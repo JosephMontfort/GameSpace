@@ -64,7 +64,16 @@ class GameSpaceService : Service() {
     private fun isPackageAGame(packageName: String): Boolean {
         return try {
             val appInfo = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
-            appInfo.category == ApplicationInfo.CATEGORY_GAME || (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+            val isSystemGame = appInfo.category == ApplicationInfo.CATEGORY_GAME ||
+            (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+
+            // verify if was added manually
+            val prefs = getSharedPreferences("gamespace_prefs", Context.MODE_PRIVATE)
+            val manualGames = prefs.getStringSet("manual_games", emptySet()) ?: emptySet()
+            val isManualGame = manualGames.contains(packageName)
+
+            // If either of these conditions is met, we display the overlay
+            isSystemGame || isManualGame
         } catch (e: Exception) {
             false
         }
