@@ -76,8 +76,19 @@ class FPSMonitor {
             val file = File(path)
             if (!file.exists()) return null
 
-                val value = file.readText().trim().toFloat().roundToInt()
-                if (value in 10..240) value else null
+                val text = file.readText().trim()
+            var value = 0f
+            if (text.contains("fps:")) {
+                value = text.substringAfter("fps:").trim().substringBefore(" ").toFloatOrNull() ?: 0f
+            } else {
+                value = text.toFloatOrNull() ?: 0f
+            }
+            var intValue = value.roundToInt()
+            
+            // Compensate for 240Hz TE heartbeat signals
+            if (intValue > 120) intValue /= 2
+            
+            if (intValue in 10..120) intValue else null
         } catch (_: Exception) {
             null
         }

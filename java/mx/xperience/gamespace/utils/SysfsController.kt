@@ -248,10 +248,7 @@ class SysfsController {
                 "/sys/class/kgsl/kgsl-3d0/force_bus_on",
                 if (enabled) "1" else "0"
             )
-            write(
-                "/sys/class/kgsl/kgsl-3d0/force_clk_on",
-                if (enabled) "1" else "0"
-            )
+            // force_clk_on disabled to prevent severe thermal throttling
         }
     }
 
@@ -338,7 +335,7 @@ class SysfsController {
     fun applyEco() {
         setCpuGovernor("powersave")
         setSchedutilRateLimits("2000", "5000")
-        setUclamp(0, 60)
+        setUclamp(0, 614)
         setCpuBoost(false)
         setGpuGovernor("powersave")
         setGpuBoost(false)
@@ -361,7 +358,7 @@ class SysfsController {
         if (targetGov == "schedutil" || targetGov == "walt") {
             setSchedutilRateLimits("500", "1000")
         }
-        setUclamp(20, 100)
+        setUclamp(204, 1024)
         setCpuBoost(true)
         setGpuGovernor("performance")
         setGpuBoost(true)
@@ -371,7 +368,7 @@ class SysfsController {
         val targetGov = getBestGovernor("performance")
         setCpuGovernor(targetGov)
         setSchedutilRateLimits("0", "0")
-        setUclamp(40, 100)
+        setUclamp(409, 1024)
         setCpuBoost(true)
         setGpuGovernor("performance")
         setGpuBoost(true)
