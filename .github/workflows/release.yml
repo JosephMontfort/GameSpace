@@ -29,16 +29,31 @@ jobs:
       - name: Build Release APK
         run: gradle assembleRelease
 
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@v1
+      - name: Sign APK Natively
         id: sign_app
-        with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.KEYSTORE_B64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASS }}
-          keyPassword: ${{ secrets.KEY_PASS }}
-          buildToolsVersion: 33.0.1
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASS: ${{ secrets.KEYSTORE_PASS }}
+          KEY_PASS: ${{ secrets.KEY_PASS }}
+        run: |
+          # Decode the keystore
+          echo "$KEYSTORE_B64" | base64 --decode > keystore.jks
+          
+          # Dynamically find the latest installed build tools on the runner
+          BUILD_TOOLS=$(ls -d /usr/local/lib/android/sdk/build-tools/* | sort -V | tail -n 1)
+          
+          # Locate the unaligned/unsigned APK
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          
+          # Align the APK
+          $BUILD_TOOLS/zipalign -v 4 "$APK_PATH" GameSpace-aligned.apk
+          
+          # Sign the APK securely
+          $BUILD_TOOLS/apksigner sign --ks keystore.jks --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASS --key-pass env:KEY_PASS --out GameSpace-signed.apk GameSpace-aligned.apk
+          
+          # Export the finalized path to the next step
+          echo "signedReleaseFile=GameSpace-signed.apk" >> $GITHUB_OUTPUT
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v1
