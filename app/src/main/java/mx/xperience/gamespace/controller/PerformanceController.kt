@@ -334,4 +334,92 @@ class PerformanceController(private val context: Context) {
         batteryInfo.text = text
         batteryInfo.setTextColor(Color.parseColor(if (stats.status == BatteryManager.BATTERY_STATUS_CHARGING) "#00FFFF" else if (stats.level >= 50) "#00FF41" else if (stats.level >= 20) "#FFA500" else "#FF4500"))
     }
+
+    fun createTriggerParams(): WindowManager.LayoutParams {
+        val displayMetrics = context.resources.displayMetrics
+        val defaultY = (200 * displayMetrics.density).toInt()
+        val viewSize = (48 * displayMetrics.density).toInt()
+
+        val savedX = prefs.getInt("trigger_x", 0)
+        val savedY = prefs.getInt("trigger_y", defaultY)
+
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        val clampedX = savedX.coerceIn(0, screenWidth - viewSize)
+        val clampedY = savedY.coerceIn(0, screenHeight - viewSize)
+
+        return WindowManager.LayoutParams(
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            android.graphics.PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = android.view.Gravity.END or android.view.Gravity.TOP
+            x = clampedX
+            y = clampedY
+        }
+    }
+
+    fun enableTriggerDrag(triggerView: android.view.View, windowManager: WindowManager) {
+        var initialX = 0
+        var initialY = 0
+        var initialTouchX = 0f
+        var initialTouchY = 0f
+        var isDragging = false
+        val touchSlop = android.view.ViewConfiguration.get(context).scaledTouchSlop
+
+        val displayMetrics = context.resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+
+        triggerView.setOnTouchListener { _, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    initialX = triggerWindowParams.x
+                    initialY = triggerWindowParams.y
+                    initialTouchX = event.rawX
+                    initialTouchY = event.rawY
+                    isDragging = false
+                    false
+                }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    val dx = event.rawX - initialTouchX
+                    val dy = event.rawY - initialTouchY
+                    if (!isDragging && (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop)) {
+                        isDragging = true
+                    }
+                    if (isDragging) {
+                        val newX = (initialX + dx).toInt()
+                        val newY = (initialY + dy).toInt()
+                        val viewWidth = triggerView.width
+                        val viewHeight = triggerView.height
+                        val clampedX = newX.coerceIn(0, screenWidth - viewWidth)
+                        val clampedY = newY.coerceIn(0, screenHeight - viewHeight)
+                        triggerWindowParams.x = clampedX
+                        triggerWindowParams.y = clampedY
+                        windowManager.updateViewLayout(triggerView, triggerWindowParams)
+                        true
+                    } else {
+                        false
+                    }
+                }
+                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                    if (isDragging) {
+                        prefs.edit().apply {
+                            putInt("trigger_x", triggerWindowParams.x)
+                            putInt("trigger_y", triggerWindowParams.y)
+                            apply()
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                }
+                else -> false
+            }
+        }
+    }
 }
+
