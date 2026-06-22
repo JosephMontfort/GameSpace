@@ -1,6 +1,5 @@
 package mx.xperience.gamespace.controller
 
-import android.animation.ValueAnimator
 import android.app.ActivityManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
@@ -67,21 +66,20 @@ class PerformanceController(private val context: Context) {
         panelView = view
         fpsText = view.findViewById(R.id.fps_counter)
         
-        // Safely bind buttons if they exist in dynamic overlays
         view.findViewById<TextView>(R.id.btn_power_saving)?.setOnClickListener { setMode(PerformanceMode.POWER_SAVING, true) }
         view.findViewById<TextView>(R.id.btn_balanced)?.setOnClickListener { setMode(PerformanceMode.BALANCED, true) }
         view.findViewById<TextView>(R.id.btn_performance)?.setOnClickListener { setMode(PerformanceMode.PERFORMANCE, true) }
         view.findViewById<TextView>(R.id.btn_turbo)?.setOnClickListener { setMode(PerformanceMode.TURBO, true) }
 
         windowParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = Gravity.TOP or Gravity.LEFT
+            gravity = Gravity.START or Gravity.TOP
             x = 24
             y = 50
         }
@@ -96,7 +94,18 @@ class PerformanceController(private val context: Context) {
         })
     }
 
+    fun updatePanelGravity() {
+        val displayMetrics = context.resources.displayMetrics
+        val isLeft = triggerWindowParams.x < displayMetrics.widthPixels / 2
+        windowParams.gravity = Gravity.TOP or (if (isLeft) Gravity.START else Gravity.END)
+        try {
+            val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            wm.updateViewLayout(panelView, windowParams)
+        } catch (e: Exception) {}
+    }
+
     fun onPanelOpened() {
+        updatePanelGravity()
         fpsMonitor.start()
         startFpsUpdates()
     }
@@ -129,14 +138,11 @@ class PerformanceController(private val context: Context) {
         handler.post(object : Runnable {
             override fun run() {
                 cpuUpdateUI()
-                
                 val currentFps = fpsMonitor.getCurrentFps()
                 fpsText?.text = currentFps.toString()
-                
                 val fpsWave = panelView.findViewById<WaveView>(R.id.fps_chart)
                 fpsWave?.setWaveAmplitude((currentFps / 120f).coerceIn(0.1f, 1.0f))
                 fpsWave?.setWaveColor(Color.parseColor("#00FFFF"))
-                
                 gpuUpdateUI()
                 updateRamUI()
                 updateBatteryInfo()
@@ -155,7 +161,6 @@ class PerformanceController(private val context: Context) {
         val events = usm.queryEvents(now - 2000, now)
         val event = UsageEvents.Event()
         var lastForeground: String? = null
-
         while (events.hasNextEvent()) {
             events.getNextEvent(event)
             if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
@@ -174,16 +179,13 @@ class PerformanceController(private val context: Context) {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memoryInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memoryInfo)
-
         val totalGB = memoryInfo.totalMem / (1024.0 * 1024 * 1024)
         val usedGB = (memoryInfo.totalMem - memoryInfo.availMem) / (1024.0 * 1024 * 1024)
         val percent = ((usedGB / totalGB) * 100).toInt()
-
         panelView.findViewById<TextView>(R.id.ram_info)?.text = String.format("%.1f/%.1f GB", usedGB, totalGB)
         val ramPercent = panelView.findViewById<TextView>(R.id.ram_percent)
         ramPercent?.text = "$percent%"
         panelView.findViewById<ProgressBar>(R.id.ram_progress)?.progress = percent
-
         when {
             percent > 90 -> ramPercent?.setTextColor(Color.parseColor("#FF4500"))
             percent > 75 -> ramPercent?.setTextColor(Color.parseColor("#FFA500"))
@@ -195,7 +197,6 @@ class PerformanceController(private val context: Context) {
         val gpuFreq = sysfsController.getGpuFreq()
         panelView.findViewById<TextView>(R.id.gpu_val)?.text = gpuFreq.first.toString() + " MHz"
         panelView.findViewById<TextView>(R.id.gpu_temp)?.text = gpuFreq.second
-
         val gpuWave = panelView.findViewById<WaveView>(R.id.gpu_chart)
         gpuWave?.setWaveAmplitude((gpuFreq.first / 1000f).coerceIn(0.2f, 0.8f))
         gpuWave?.setWaveColor(Color.parseColor("#f74a7b"))
@@ -209,13 +210,11 @@ class PerformanceController(private val context: Context) {
         }
         val freqs = sysfsController.getCpuClusterFreqs()
         val temp = sysfsController.getCpuTemperature()
-
         panelView.findViewById<TextView>(R.id.cpu_little_val)?.text = String.format("%.2f", freqs.first / 1000000.0) + " GHz"
         panelView.findViewById<TextView>(R.id.cpu_little_temp)?.text = temp
         val littleWave = panelView.findViewById<WaveView>(R.id.cpu_little_chart)
         if (cpuLittleMaxLimit > 0) littleWave?.setWaveAmplitude((freqs.first.toFloat() / cpuLittleMaxLimit.toFloat()).coerceIn(0.1f, 1.0f))
         littleWave?.setWaveColor(Color.parseColor("#00FF41"))
-
         panelView.findViewById<TextView>(R.id.cpu_big_val)?.text = String.format("%.2f", freqs.second / 1000000.0) + " GHz"
         panelView.findViewById<TextView>(R.id.cpu_big_temp)?.text = temp
         val bigWave = panelView.findViewById<WaveView>(R.id.cpu_big_chart)
@@ -240,17 +239,14 @@ class PerformanceController(private val context: Context) {
         val btnBalanced = panelView.findViewById<TextView>(R.id.btn_balanced)
         val btnPerformance = panelView.findViewById<TextView>(R.id.btn_performance)
         val btnTurbo = panelView.findViewById<TextView>(R.id.btn_turbo)
-
         btnPowerSaving?.background = context.getDrawable(R.drawable.bg_mode_normal)
         btnBalanced?.background = context.getDrawable(R.drawable.bg_mode_normal)
         btnPerformance?.background = context.getDrawable(R.drawable.bg_mode_normal)
         btnTurbo?.background = context.getDrawable(R.drawable.bg_mode_normal)
-
         btnPowerSaving?.setTextColor(Color.parseColor("#888888"))
         btnBalanced?.setTextColor(Color.parseColor("#888888"))
         btnPerformance?.setTextColor(Color.parseColor("#888888"))
         btnTurbo?.setTextColor(Color.parseColor("#888888"))
-
         when (currentMode) {
             PerformanceMode.POWER_SAVING -> {
                 btnPowerSaving?.background = context.getDrawable(R.drawable.bg_mode_selected)
@@ -273,15 +269,8 @@ class PerformanceController(private val context: Context) {
 
     private fun showModeChangeAnimation(mode: PerformanceMode) {
         val panelBackground = panelView.findViewById<View>(R.id.panel_background) ?: return
-        val pulseColor = when (mode) {
-            PerformanceMode.POWER_SAVING -> Color.parseColor("#00FFFF")
-            PerformanceMode.BALANCED -> Color.parseColor("#00FF41")
-            PerformanceMode.PERFORMANCE -> Color.parseColor("#FF00FF")
-            PerformanceMode.TURBO -> Color.parseColor("#FFA500")
-        }
-
-        panelBackground.animate().scaleX(1.05f).scaleY(1.05f).setDuration(200).withEndAction {
-            panelBackground.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+        panelBackground.animate().scaleX(1.04f).scaleY(1.04f).setDuration(150).withEndAction {
+            panelBackground.animate().scaleX(1f).scaleY(1f).setDuration(150).start()
         }.start()
     }
 
@@ -289,14 +278,12 @@ class PerformanceController(private val context: Context) {
         val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         val level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-
         var status = BatteryManager.BATTERY_STATUS_UNKNOWN
         var temperature = 0
         var voltage = 0
         var health = BatteryManager.BATTERY_HEALTH_UNKNOWN
         var plugged = 0
         var timeRemaining = -1L
-
         intent?.let {
             status = it.getIntExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_UNKNOWN)
             temperature = it.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10
@@ -311,7 +298,6 @@ class PerformanceController(private val context: Context) {
     private fun updateBatteryInfo() {
         val batteryInfo = panelView.findViewById<TextView>(R.id.battery_info) ?: return
         val stats = getBatteryStats()
-
         val text = buildString {
             append("${stats.temperature}°C\n")
             append("${stats.level}%")
@@ -337,14 +323,13 @@ class PerformanceController(private val context: Context) {
 
     fun createTriggerParams(): WindowManager.LayoutParams {
         val displayMetrics = context.resources.displayMetrics
-        val defaultY = (200 * displayMetrics.density).toInt()
         val viewSize = (48 * displayMetrics.density).toInt()
-
-        val savedX = prefs.getInt("trigger_x", 0)
-        val savedY = prefs.getInt("trigger_y", defaultY)
-
         val screenWidth = displayMetrics.widthPixels
         val screenHeight = displayMetrics.heightPixels
+        val defaultY = (200 * displayMetrics.density).toInt()
+
+        val savedX = prefs.getInt("trigger_x", screenWidth)
+        val savedY = prefs.getInt("trigger_y", defaultY)
 
         val clampedX = savedX.coerceIn(0, screenWidth - viewSize)
         val clampedY = savedY.coerceIn(0, screenHeight - viewSize)
@@ -354,21 +339,21 @@ class PerformanceController(private val context: Context) {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            android.graphics.PixelFormat.TRANSLUCENT
+            PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = android.view.Gravity.END or android.view.Gravity.TOP
+            gravity = Gravity.START or Gravity.TOP
             x = clampedX
             y = clampedY
         }
     }
 
-    fun enableTriggerDrag(triggerView: android.view.View, windowManager: WindowManager) {
+    fun enableTriggerDrag(triggerView: View, windowManager: WindowManager) {
         var initialX = 0
         var initialY = 0
         var initialTouchX = 0f
         var initialTouchY = 0f
         var isDragging = false
-        val touchSlop = android.view.ViewConfiguration.get(context).scaledTouchSlop
+        val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
 
         val displayMetrics = context.resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels
@@ -376,7 +361,7 @@ class PerformanceController(private val context: Context) {
 
         triggerView.setOnTouchListener { _, event ->
             when (event.action) {
-                android.view.MotionEvent.ACTION_DOWN -> {
+                MotionEvent.ACTION_DOWN -> {
                     initialX = triggerWindowParams.x
                     initialY = triggerWindowParams.y
                     initialTouchX = event.rawX
@@ -384,7 +369,7 @@ class PerformanceController(private val context: Context) {
                     isDragging = false
                     false
                 }
-                android.view.MotionEvent.ACTION_MOVE -> {
+                MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - initialTouchX
                     val dy = event.rawY - initialTouchY
                     if (!isDragging && (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop)) {
@@ -395,18 +380,20 @@ class PerformanceController(private val context: Context) {
                         val newY = (initialY + dy).toInt()
                         val viewWidth = triggerView.width
                         val viewHeight = triggerView.height
-                        val clampedX = newX.coerceIn(0, screenWidth - viewWidth)
-                        val clampedY = newY.coerceIn(0, screenHeight - viewHeight)
-                        triggerWindowParams.x = clampedX
-                        triggerWindowParams.y = clampedY
+                        triggerWindowParams.x = newX.coerceIn(0, screenWidth - viewWidth)
+                        triggerWindowParams.y = newY.coerceIn(0, screenHeight - viewHeight)
                         windowManager.updateViewLayout(triggerView, triggerWindowParams)
                         true
                     } else {
                         false
                     }
                 }
-                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     if (isDragging) {
+                        val isLeft = triggerWindowParams.x < screenWidth / 2
+                        triggerWindowParams.x = if (isLeft) 0 else screenWidth - triggerView.width
+                        windowManager.updateViewLayout(triggerView, triggerWindowParams)
+                        
                         prefs.edit().apply {
                             putInt("trigger_x", triggerWindowParams.x)
                             putInt("trigger_y", triggerWindowParams.y)
@@ -422,4 +409,3 @@ class PerformanceController(private val context: Context) {
         }
     }
 }
-
