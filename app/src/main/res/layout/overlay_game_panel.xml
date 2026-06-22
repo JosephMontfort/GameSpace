@@ -5,6 +5,7 @@
     android:background="@android:color/transparent">
 
     <LinearLayout
+        android:id="@+id/panel_background"
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -35,7 +36,6 @@
                 android:background="@drawable/bg_stats_card"
                 android:padding="8dp"
                 android:layout_marginEnd="4dp">
-
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                     <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_cpu" android:tint="#00FF41" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="LITTLE CORE" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -53,7 +53,6 @@
                 android:background="@drawable/bg_stats_card"
                 android:padding="8dp"
                 android:layout_marginStart="4dp">
-
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                     <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_cpu_bolt" android:tint="#FF00FF" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="BIG CORE" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -78,7 +77,6 @@
                 android:background="@drawable/bg_stats_card"
                 android:padding="8dp"
                 android:layout_marginEnd="4dp">
-
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                     <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_gpu" android:tint="#FFD700" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="GPU" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -96,7 +94,6 @@
                 android:background="@drawable/bg_stats_card"
                 android:padding="8dp"
                 android:layout_marginStart="4dp">
-
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                     <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_fps" android:tint="#00FFFF" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="REAL FPS" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -136,6 +133,5 @@
             <TextView android:id="@+id/game_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:maxLines="1" android:text="GameSpace" android:textColor="#FFFFFF" android:textSize="11sp" />
             <TextView android:id="@+id/battery_info" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="--%" android:textColor="#00FF41" android:textSize="10sp" />
         </LinearLayout>
-
     </LinearLayout>
 </FrameLayout>
