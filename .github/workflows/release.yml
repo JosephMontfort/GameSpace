@@ -38,6 +38,7 @@ jobs:
           alias: ${{ secrets.KEY_ALIAS }}
           keyStorePassword: ${{ secrets.KEYSTORE_PASS }}
           keyPassword: ${{ secrets.KEY_PASS }}
+          buildToolsVersion: 33.0.1
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v1
