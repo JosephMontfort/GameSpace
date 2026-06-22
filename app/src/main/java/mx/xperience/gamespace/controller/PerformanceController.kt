@@ -96,7 +96,18 @@ class PerformanceController(private val context: Context) {
         })
     }
 
+    fun updatePanelGravity() {
+        val displayMetrics = context.resources.displayMetrics
+        val isLeft = triggerWindowParams.x < displayMetrics.widthPixels / 2
+        windowParams.gravity = android.view.Gravity.TOP or (if (isLeft) android.view.Gravity.START else android.view.Gravity.END)
+        try {
+            val wm = context.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
+            wm.updateViewLayout(panelView, windowParams)
+        } catch (e: Exception) {}
+    }
+
     fun onPanelOpened() {
+        updatePanelGravity()
         fpsMonitor.start()
         startFpsUpdates()
     }
@@ -340,7 +351,7 @@ class PerformanceController(private val context: Context) {
         val defaultY = (200 * displayMetrics.density).toInt()
         val viewSize = (48 * displayMetrics.density).toInt()
 
-        val savedX = prefs.getInt("trigger_x", 0)
+        val savedX = prefs.getInt("trigger_x", screenWidth)
         val savedY = prefs.getInt("trigger_y", defaultY)
 
         val screenWidth = displayMetrics.widthPixels
@@ -356,7 +367,7 @@ class PerformanceController(private val context: Context) {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             android.graphics.PixelFormat.TRANSLUCENT
         ).apply {
-            gravity = android.view.Gravity.END or android.view.Gravity.TOP
+            gravity = android.view.Gravity.START or android.view.Gravity.TOP
             x = clampedX
             y = clampedY
         }
@@ -407,6 +418,10 @@ class PerformanceController(private val context: Context) {
                 }
                 android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> {
                     if (isDragging) {
+                        val isLeft = triggerWindowParams.x < screenWidth / 2
+                        triggerWindowParams.x = if (isLeft) 0 else screenWidth - triggerView.width
+                        windowManager.updateViewLayout(triggerView, triggerWindowParams)
+                        
                         prefs.edit().apply {
                             putInt("trigger_x", triggerWindowParams.x)
                             putInt("trigger_y", triggerWindowParams.y)
