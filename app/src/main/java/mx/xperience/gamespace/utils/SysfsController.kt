@@ -24,17 +24,10 @@ class SysfsController {
     private var stockState: StockCpuState? = null
 
     private fun read(path: String): String? {
-        return try {
-            val file = File(path)
-            if (!file.exists() || !file.canRead()) null
-            else file.readText().trim()
-        } catch (_: Exception) {
-            null
-        }
+        return SysFsManager.readAsRoot(path).takeIf { it.isNotEmpty() }
     }
 
-    private fun exists(path: String): Boolean =
-        File(path).exists()
+    private fun exists(path: String): Boolean { if (File(path).exists()) return true; return SysFsManager.readAsRoot("ls $path").isNotEmpty() }
 
     fun captureStockState() {
         if (stockState != null) return
@@ -177,15 +170,8 @@ class SysfsController {
             )
 
             for (path in tempPaths) {
-                val file = File(path)
-                if (file.exists()) {
-                    RandomAccessFile(file, "r").use { reader ->
-                        val temp = reader.readLine()?.trim()?.toIntOrNull()
-                        temp?.let {
-                            return String.format("%.1f°C", it / 1000.0)
-                        }
-                    }
-                }
+                val tempValue = SysFsManager.tryReadFileAsLong(path)
+                if (tempValue > 0) return String.format("%.1f°C", tempValue / 1000.0)
             }
             "N/A"
         } catch (e: Exception) {
@@ -365,9 +351,7 @@ class SysfsController {
 
     // Injected Root Executor
     fun executeSu(path: String, value: String) {
-        try {
-            Runtime.getRuntime().exec(arrayOf("su", "-c", "echo $value > $path")).waitFor()
-        } catch (e: Exception) { e.printStackTrace() }
+        SysFsManager.executeSu(path, value)
     }
 
 }
