@@ -4,7 +4,6 @@
  */
 package mx.xperience.gamespace
 
-import android.app.GameManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -91,8 +90,10 @@ class MainActivity : AppCompatActivity() {
             showOptimizationToast(pkg)
 
             // We use the AOSP API to put the kernel into high-performance mode.
-            val gameManager = getSystemService(Context.GAME_SERVICE) as GameManager
-            gameManager.setGameMode(pkg, GameManager.GAME_MODE_PERFORMANCE)
+            // Bypassing hidden AOSP API with root shell equivalent
+            try {
+                Runtime.getRuntime().exec(arrayOf("su", "-c", "cmd game mode performance $pkg")).waitFor()
+            } catch (e: Exception) { e.printStackTrace() }
 
             Handler(Looper.getMainLooper()).postDelayed({
                 val launchIntent = pm.getLaunchIntentForPackage(pkg)
