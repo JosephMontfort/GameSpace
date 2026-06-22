@@ -3,7 +3,7 @@ name: Build and Publish GameSpace
 on:
   push:
     tags:
-      - 'v*' # Triggers action only when a version tag is pushed
+      - 'v*'
 
 jobs:
   build-and-release:
@@ -21,7 +21,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Gradle Wrapper
+      - name: Generate Wrapper on Runner
         run: gradle wrapper
 
       - name: Build Release APK
