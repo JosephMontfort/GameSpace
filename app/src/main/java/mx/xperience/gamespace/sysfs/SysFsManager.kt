@@ -18,22 +18,12 @@ object SysFsManager {
 
     private const val TAG = "SysFsManager"
 
-    fun write(path: String, value: String) {
-        try {
-            val file = File(path)
-            if (!file.exists()) return
-            file.writeText(value)
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to write $value to $path", e)
-        }
-    }
-
     fun writeInt(path: String, value: Int) {
-        write(path, value.toString())
+        executeSu(path, value.toString())
     }
 
     fun writeLong(path: String, value: Long) {
-        write(path, value.toString())
+        executeSu(path, value.toString())
     }
 
     fun tryReadFileAsLong(path: String): Long {
@@ -50,4 +40,12 @@ object SysFsManager {
             0L
         }
     }
+
+    // Injected Root Executor
+    fun executeSu(path: String, value: String) {
+        try {
+            Runtime.getRuntime().exec(arrayOf("su", "-c", "echo $value > $path")).waitFor()
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
 }

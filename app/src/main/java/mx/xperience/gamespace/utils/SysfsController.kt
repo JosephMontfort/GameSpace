@@ -33,17 +33,6 @@ class SysfsController {
         }
     }
 
-    private fun write(path: String, value: String): Boolean {
-        return try {
-            val file = File(path)
-            if (!file.exists() || !file.canWrite()) return false
-            file.writeText(value)
-            true
-        } catch (_: Exception) {
-            false
-        }
-    }
-
     private fun exists(path: String): Boolean =
         File(path).exists()
 
@@ -75,11 +64,11 @@ class SysfsController {
         val state = stockState ?: return
 
         state.schedutilUp.forEach { (path, value) ->
-            write(path, value)
+            executeSu(path, value)
         }
 
         state.schedutilDown.forEach { (path, value) ->
-            write(path, value)
+            executeSu(path, value)
         }
 
         state.uclampMin?.let { writeUclampMin(it) }
@@ -95,7 +84,7 @@ class SysfsController {
         folders?.forEach { policy ->
             val govPath = "${policy.absolutePath}/scaling_governor"
             if (exists(govPath)) {
-                write(govPath, governor)
+                executeSu(govPath, governor)
             }
         }
     }
@@ -127,21 +116,21 @@ class SysfsController {
         File("/sys/devices/system/cpu/cpufreq")
         .listFiles { f -> f.name.startsWith("policy") }
         ?.forEach {
-            write("${it.absolutePath}/schedutil/up_rate_limit_us", upUs)
-            write("${it.absolutePath}/schedutil/down_rate_limit_us", downUs)
+            executeSu("${it.absolutePath}/schedutil/up_rate_limit_us", upUs)
+            executeSu("${it.absolutePath}/schedutil/down_rate_limit_us", downUs)
         }
     }
 
     fun setCpuBoost(enabled: Boolean) {
         when {
             exists("/sys/module/msm_performance/parameters/cpu_boost") ->
-                write(
+                executeSu(
                     "/sys/module/msm_performance/parameters/cpu_boost",
                     if (enabled) "1" else "0"
                 )
 
             exists("/sys/module/cpu_boost/parameters/input_boost_enabled") ->
-                write(
+                executeSu(
                     "/sys/module/cpu_boost/parameters/input_boost_enabled",
                     if (enabled) "1" else "0"
                 )
@@ -207,13 +196,13 @@ class SysfsController {
     /* ===================== UCLAMP ===================== */
 
     fun setUclamp(min: Int, max: Int) {
-        write("/proc/sys/kernel/sched_util_clamp_min", min.toString())
-        write("/proc/sys/kernel/sched_util_clamp_max", max.toString())
+        executeSu("/proc/sys/kernel/sched_util_clamp_min", min.toString())
+        executeSu("/proc/sys/kernel/sched_util_clamp_max", max.toString())
     }
 
     fun setUclampTopApp(min: Int, max: Int) {
-        write("/proc/sys/kernel/sched_util_clamp_min_rt_default", min.toString())
-        write("/proc/sys/kernel/sched_util_clamp_max_rt_default", max.toString())
+        executeSu("/proc/sys/kernel/sched_util_clamp_min_rt_default", min.toString())
+        executeSu("/proc/sys/kernel/sched_util_clamp_max_rt_default", max.toString())
     }
 
     fun readUclampMin(): String? =
@@ -223,11 +212,11 @@ class SysfsController {
         read("/proc/sys/kernel/sched_util_clamp_max")
 
     fun writeUclampMin(value: String) {
-        write("/proc/sys/kernel/sched_util_clamp_min", value)
+        executeSu("/proc/sys/kernel/sched_util_clamp_min", value)
     }
 
     fun writeUclampMax(value: String) {
-        write("/proc/sys/kernel/sched_util_clamp_max", value)
+        executeSu("/proc/sys/kernel/sched_util_clamp_max", value)
     }
 
     /* ===================== GPU ===================== */
@@ -235,16 +224,16 @@ class SysfsController {
     fun setGpuGovernor(governor: String) {
         when {
             exists("/sys/class/kgsl/kgsl-3d0/devfreq/governor") ->
-                write("/sys/class/kgsl/kgsl-3d0/devfreq/governor", governor)
+                executeSu("/sys/class/kgsl/kgsl-3d0/devfreq/governor", governor)
 
             exists("/sys/class/devfreq/kgsl-3d0/governor") ->
-                write("/sys/class/devfreq/kgsl-3d0/governor", governor)
+                executeSu("/sys/class/devfreq/kgsl-3d0/governor", governor)
         }
     }
 
     fun setGpuBoost(enabled: Boolean) {
         if (exists("/sys/class/kgsl/kgsl-3d0/force_bus_on")) {
-            write(
+            executeSu(
                 "/sys/class/kgsl/kgsl-3d0/force_bus_on",
                 if (enabled) "1" else "0"
             )
@@ -373,4 +362,12 @@ class SysfsController {
         setGpuGovernor("performance")
         setGpuBoost(true)
     }
+
+    // Injected Root Executor
+    fun executeSu(path: String, value: String) {
+        try {
+            Runtime.getRuntime().exec(arrayOf("su", "-c", "echo $value > $path")).waitFor()
+        } catch (e: Exception) { e.printStackTrace() }
+    }
+
 }

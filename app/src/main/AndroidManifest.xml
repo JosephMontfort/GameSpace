@@ -7,9 +7,7 @@
           xmlns:tools="http://schemas.android.com/tools"
           package="mx.xperience.gamespace"
           android:versionCode="1"
-          android:versionName="1.0"
-          coreApp="true"
-          android:sharedUserId="android.uid.system">
+          android:versionName="1.0">
 
     <!-- Permiso de status bar -->
     <uses-permission android:name="android.permission.STATUS_BAR" />
@@ -87,20 +85,23 @@
             android:name=".GameSpaceService"
             android:enabled="true"
             android:exported="true"
-            android:foregroundServiceType="systemExempted"
+            android:foregroundServiceType="specialUse"
             android:directBootAware="true"
             android:process=":gamespace">
             <intent-filter>
                 <action android:name="mx.xperience.gamespace.START" />
                 <action android:name="mx.xperience.gamespace.STOP" />
             </intent-filter>
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Performance Overlay" />
         </service>
 
         <service
             android:name=".services.StatOverlayService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse" />
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Performance Overlay" />
+        </service>
 
         <!-- RECEIVER PARA AUTO-INICIO -->
         <receiver

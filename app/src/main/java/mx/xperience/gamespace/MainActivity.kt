@@ -11,6 +11,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
@@ -41,6 +42,13 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        
+        if (!Settings.canDrawOverlays(this)) {
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:$packageName"))
+            startActivity(intent)
+            Toast.makeText(this, "Please grant Display Over Other Apps permission", Toast.LENGTH_LONG).show()
+            return
+        }
         startService(Intent(this, GameSpaceService::class.java))
 
         setupGameGrid()
