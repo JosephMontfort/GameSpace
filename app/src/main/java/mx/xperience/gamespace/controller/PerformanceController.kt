@@ -29,6 +29,7 @@ import mx.xperience.gamespace.view.WaveView
 class PerformanceController(private val context: Context) {
 
     var onRequestShowTrigger: (() -> Unit)? = null
+    var onRequestCollapse: (() -> Unit)? = null
 
     enum class PerformanceMode {
         POWER_SAVING, BALANCED, PERFORMANCE, TURBO
@@ -76,12 +77,23 @@ class PerformanceController(private val context: Context) {
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.TOP
             x = 24
             y = 50
+        }
+
+        // Listen for touches outside the overlay to collapse it automatically
+        panelView.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                onRequestCollapse?.invoke()
+                true
+            } else {
+                false
+            }
         }
     }
 
