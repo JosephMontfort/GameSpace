@@ -24,11 +24,44 @@ class SysfsController {
     private var stockState: StockCpuState? = null
 
     private fun read(path: String): String? {
-        return SysFsManager.readAsRoot(path).takeIf { it.isNotEmpty() }
+        return SysFsManager.readAsRoot(path).takeIf { it.isNotEmpty() 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
-    private fun exists(path: String): Boolean { if (File(path).exists()) return true; return SysFsManager.readAsRoot("ls $path").isNotEmpty() }
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
+    private fun exists(path: String): Boolean { if (File(path).exists()) return true; return SysFsManager.readAsRoot("ls $path").isNotEmpty() 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun captureStockState() {
         if (stockState != null) return
 
@@ -36,57 +69,222 @@ class SysfsController {
         val down = mutableMapOf<String, String>()
 
         File("/sys/devices/system/cpu/cpufreq")
-            .listFiles { f -> f.name.startsWith("policy") }
-            ?.forEach { policy ->
+            .listFiles { f -> f.name.startsWith("policy") 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            ?.forEach { policy ->
                 val upPath = "${policy.path}/schedutil/up_rate_limit_us"
                 val downPath = "${policy.path}/schedutil/down_rate_limit_us"
 
-                read(upPath)?.let { up[upPath] = it }
-                read(downPath)?.let { down[downPath] = it }
-            }
+                read(upPath)?.let { up[upPath] = it 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}                read(downPath)?.let { down[downPath] = it 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
         stockState = StockCpuState(
             schedutilUp = up,
             schedutilDown = down,
             uclampMin = readUclampMin(),
             uclampMax = readUclampMax()
         )
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun restoreStockState() {
         val state = stockState ?: return
 
         state.schedutilUp.forEach { (path, value) ->
             executeSu(path, value)
-        }
-
-        state.schedutilDown.forEach { (path, value) ->
-            executeSu(path, value)
-        }
-
-        state.uclampMin?.let { writeUclampMin(it) }
-        state.uclampMax?.let { writeUclampMax(it) }
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
+        state.schedutilDown.forEach { (path, value) ->
+            executeSu(path, value)
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
+        state.uclampMin?.let { writeUclampMin(it) 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        state.uclampMax?.let { writeUclampMax(it) 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     /* ===================== CPU ===================== */
 
     fun setCpuGovernor(governor: String) {
         val base = "/sys/devices/system/cpu/cpufreq"
-        val folders = File(base).listFiles { f -> f.name.startsWith("policy") || f.name.startsWith("cpu") }
+        val folders = File(base).listFiles { f -> f.name.startsWith("policy") || f.name.startsWith("cpu") 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
         folders?.forEach { policy ->
             val govPath = "${policy.absolutePath}/scaling_governor"
             if (exists(govPath)) {
                 executeSu(govPath, governor)
-            }
-        }
+            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     private fun getAvailableGovernors(): List<String> {
         val path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
         return read(path)?.split(" ") ?: emptyList()
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     /**
      * Retorna el mejor gobernador disponible según una lista de prioridades.
      * Para kernels modernos (5.10+), intentamos buscar 'walt', 'schedutil'
@@ -102,18 +300,73 @@ class SysfsController {
             available.contains("schedutil") -> "schedutil"
             available.contains("interactive") -> "interactive"
             else -> available.firstOrNull() ?: "performance"
-        }
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun setSchedutilRateLimits(upUs: String, downUs: String) {
         File("/sys/devices/system/cpu/cpufreq")
-        .listFiles { f -> f.name.startsWith("policy") }
-        ?.forEach {
-            executeSu("${it.absolutePath}/schedutil/up_rate_limit_us", upUs)
-            executeSu("${it.absolutePath}/schedutil/down_rate_limit_us", downUs)
-        }
+        .listFiles { f -> f.name.startsWith("policy") 
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        ?.forEach {
+            executeSu("${it.absolutePath}/schedutil/up_rate_limit_us", upUs)
+            executeSu("${it.absolutePath}/schedutil/down_rate_limit_us", downUs)
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun setCpuBoost(enabled: Boolean) {
         when {
             exists("/sys/module/msm_performance/parameters/cpu_boost") ->
@@ -127,9 +380,31 @@ class SysfsController {
                     "/sys/module/cpu_boost/parameters/input_boost_enabled",
                     if (enabled) "1" else "0"
                 )
-        }
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun getMaxCpuLimit(): Long {
         var maxLimit = 0L
         for (i in 0..7) {
@@ -139,12 +414,56 @@ class SysfsController {
                 RandomAccessFile(path, "r").use { reader ->
                     val freq = reader.readLine()?.trim()?.toLong() ?: 0L
                     if (freq > maxLimit) maxLimit = freq
-                }
-            }
-        }
-        return maxLimit
+                
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        return maxLimit
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun getCurrentMaxFreqKHz(): Long {
         var currentMax = 0L
         for (i in 0..7) {
@@ -154,12 +473,56 @@ class SysfsController {
                 RandomAccessFile(path, "r").use { reader ->
                     val freq = reader.readLine()?.trim()?.toLong() ?: 0L
                     if (freq > currentMax) currentMax = freq
-                }
-            }
-        }
-        return currentMax
+                
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        return currentMax
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun getCpuTemperature(): String {
         return try {
             // Leer temperatura de diferentes sensores
@@ -172,25 +535,80 @@ class SysfsController {
             for (path in tempPaths) {
                 val tempValue = SysFsManager.tryReadFileAsLong(path)
                 if (tempValue > 0) return String.format("%.1f°C", tempValue / 1000.0)
-            }
-            "N/A"
-        } catch (e: Exception) {
-            "N/A"
-        }
+            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            "N/A"
+        } catch (e: Exception) {
+            "N/A"
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     /* ===================== UCLAMP ===================== */
 
     fun setUclamp(min: Int, max: Int) {
         executeSu("/proc/sys/kernel/sched_util_clamp_min", min.toString())
         executeSu("/proc/sys/kernel/sched_util_clamp_max", max.toString())
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun setUclampTopApp(min: Int, max: Int) {
         executeSu("/proc/sys/kernel/sched_util_clamp_min_rt_default", min.toString())
         executeSu("/proc/sys/kernel/sched_util_clamp_max_rt_default", max.toString())
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun readUclampMin(): String? =
         read("/proc/sys/kernel/sched_util_clamp_min")
 
@@ -199,12 +617,34 @@ class SysfsController {
 
     fun writeUclampMin(value: String) {
         executeSu("/proc/sys/kernel/sched_util_clamp_min", value)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun writeUclampMax(value: String) {
         executeSu("/proc/sys/kernel/sched_util_clamp_max", value)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     /* ===================== GPU ===================== */
 
     fun setGpuGovernor(governor: String) {
@@ -214,9 +654,31 @@ class SysfsController {
 
             exists("/sys/class/devfreq/kgsl-3d0/governor") ->
                 executeSu("/sys/class/devfreq/kgsl-3d0/governor", governor)
-        }
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun setGpuBoost(enabled: Boolean) {
         if (exists("/sys/class/kgsl/kgsl-3d0/force_bus_on")) {
             executeSu(
@@ -224,9 +686,31 @@ class SysfsController {
                 if (enabled) "1" else "0"
             )
             // force_clk_on disabled to prevent severe thermal throttling
-        }
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
      fun getGpuFreq(): Pair<Int, String> {
         var freq = 0
         var temp = "N/A"
@@ -249,18 +733,62 @@ class SysfsController {
             if (value > 0) {
                 freq = (value / 1000000).toInt()
                 break
-            }
-        }
+            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
         // Buscar temperatura
         for (tPath in qcomTempPaths) {
             val tempValue = SysFsManager.tryReadFileAsLong(tPath)
             if (tempValue > 0) {
                 temp = String.format("%.1f°C", tempValue / 1000.0)
                 break
-            }
-        }
+            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
         if (freq == 0) {
             // Mali
             val maliPaths = listOf(
@@ -276,13 +804,57 @@ class SysfsController {
                 if (value > 0) {
                     freq = (value / 1000000).toInt()
                     break
-                }
-            }
-        }
-
-        return Pair(freq, temp)
+                
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
+        return Pair(freq, temp)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun getGpuMaxFreqFromHardware(): Long {
         return try {
             val paths = arrayOf(
@@ -296,15 +868,70 @@ class SysfsController {
                 if (file.exists()) {
                     RandomAccessFile(file, "r").use { raf ->
                         return raf.readLine()?.trim()?.toLongOrNull() ?: 0L
-                    }
-                }
-            }
-            0L
-        } catch (e: Exception) {
-            0L
-        }
+                    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}                
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}            0L
+        } catch (e: Exception) {
+            0L
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     /* ===================== MODES ===================== */
 
     fun applyEco() {
@@ -314,8 +941,19 @@ class SysfsController {
         setCpuBoost(false)
         setGpuGovernor("powersave")
         setGpuBoost(false)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun applyBalanced() {
         captureStockState()
         restoreStockState()
@@ -324,21 +962,54 @@ class SysfsController {
         setCpuBoost(false)
         setGpuGovernor("msm-adreno-tz")
         setGpuBoost(false)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun applyPerformance() {
         val targetGov = getBestGovernor("walt")
         setCpuGovernor(targetGov)
 
         if (targetGov == "schedutil" || targetGov == "walt") {
             setSchedutilRateLimits("500", "1000")
-        }
-        setUclamp(204, 1024)
+        
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
+    }
+
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}        setUclamp(204, 1024)
         setCpuBoost(true)
         setGpuGovernor("performance")
         setGpuBoost(true)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     fun applyTurbo() {
         val targetGov = getBestGovernor("performance")
         setCpuGovernor(targetGov)
@@ -347,11 +1018,33 @@ class SysfsController {
         setCpuBoost(true)
         setGpuGovernor("performance")
         setGpuBoost(true)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
     // Injected Root Executor
     fun executeSu(path: String, value: String) {
         SysFsManager.executeSu(path, value)
+    
+    fun getCpuClusterFreqs(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/scaling_cur_freq")
+        return Pair(little, big)
     }
 
+    fun getCpuClusterMaxLimits(): Pair<Long, Long> {
+        val little = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        val big = SysFsManager.tryReadFileAsLong("/sys/devices/system/cpu/cpu4/cpufreq/cpuinfo_max_freq")
+        return Pair(little, big)
+    }
+}
 }

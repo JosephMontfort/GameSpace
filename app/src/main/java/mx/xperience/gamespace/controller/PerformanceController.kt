@@ -91,7 +91,8 @@ class PerformanceController(private val context: Context) {
     }
 
     //cpu variables
-    private var cpuMaxLimit: Long = 0L
+    private var cpuLittleMaxLimit: Long = 0L
+    private var cpuBigMaxLimit: Long = 0L
 
     private var statsActive = false
 
@@ -210,7 +211,13 @@ class PerformanceController(private val context: Context) {
         handler.post(object : Runnable {
             override fun run() {
                 cpuUpdateUI()
-                fpsText.text = "${fpsMonitor.getCurrentFps()} FPS"
+                
+                val currentFps = fpsMonitor.getCurrentFps()
+                fpsText.text = currentFps.toString()
+                val fpsWave = panelView.findViewById<WaveView>(R.id.fps_chart)
+                fpsWave?.setWaveAmplitude((currentFps / 120f).coerceIn(0.1f, 1.0f))
+                fpsWave?.setWaveColor(Color.parseColor("#00FFFF"))
+                
                 gpuUpdateUI()
                 updateRamUI()
                 updateBatteryInfo()
@@ -300,20 +307,27 @@ class PerformanceController(private val context: Context) {
      *
      */
     private fun cpuUpdateUI() {
-        if (cpuMaxLimit == 0L) cpuMaxLimit = sysfsController.getMaxCpuLimit()
-            val currentFreqKHz = sysfsController.getCurrentMaxFreqKHz()
+        if (cpuLittleMaxLimit == 0L) {
+            val limits = sysfsController.getCpuClusterMaxLimits()
+            cpuLittleMaxLimit = limits.first
+            cpuBigMaxLimit = limits.second
+        }
+        val freqs = sysfsController.getCpuClusterFreqs()
+        val temp = sysfsController.getCpuTemperature()
 
-        val cpuVal = panelView?.findViewById<TextView>(R.id.cpu_val)
-        cpuVal?.text = String.format("%.2f", currentFreqKHz / 1000000.0) + " GHz"
+        // Little Cluster
+        panelView.findViewById<TextView>(R.id.cpu_little_val)?.text = String.format("%.2f", freqs.first / 1000000.0) + " GHz"
+        panelView.findViewById<TextView>(R.id.cpu_little_temp)?.text = temp
+        val littleWave = panelView.findViewById<WaveView>(R.id.cpu_little_chart)
+        if (cpuLittleMaxLimit > 0) littleWave?.setWaveAmplitude((freqs.first.toFloat() / cpuLittleMaxLimit).coerceIn(0.1f, 1.0f))
+        littleWave?.setWaveColor(Color.parseColor("#00FF41"))
 
-        val cpuTemp = panelView?.findViewById<TextView>(R.id.cpu_temp)
-        cpuTemp?.text = sysfsController.getCpuTemperature()
-
-        // Onda CPU
-        val cpuWave = panelView?.findViewById<WaveView>(R.id.cpu_chart)
-        val ratio = (currentFreqKHz.toFloat() / cpuMaxLimit.toFloat()).coerceIn(0.1f, 1.0f)
-        cpuWave?.setWaveAmplitude(ratio)
-        cpuWave?.setWaveColor(Color.parseColor("#4a9cf7"))
+        // Big Cluster
+        panelView.findViewById<TextView>(R.id.cpu_big_val)?.text = String.format("%.2f", freqs.second / 1000000.0) + " GHz"
+        panelView.findViewById<TextView>(R.id.cpu_big_temp)?.text = temp
+        val bigWave = panelView.findViewById<WaveView>(R.id.cpu_big_chart)
+        if (cpuBigMaxLimit > 0) bigWave?.setWaveAmplitude((freqs.second.toFloat() / cpuBigMaxLimit).coerceIn(0.1f, 1.0f))
+        bigWave?.setWaveColor(Color.parseColor("#FF00FF"))
     }
 
     private fun createOverlayParams(
