@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:background="@android:color/transparent">
 
     <LinearLayout
@@ -32,21 +32,22 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
                 android:layout_marginEnd="4dp">
                 
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/cpu_little_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="55dp"
                     android:layout_gravity="bottom"
-                    android:alpha="0.5" />
+                    android:alpha="0.4" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="10dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                         <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_cpu" android:tint="#00FF41" />
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="LITTLE CORE" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -60,21 +61,22 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
                 android:layout_marginStart="4dp">
                 
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/cpu_big_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="55dp"
                     android:layout_gravity="bottom"
-                    android:alpha="0.5" />
+                    android:alpha="0.4" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="10dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                         <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_cpu_bolt" android:tint="#FF00FF" />
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="BIG CORE" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -95,21 +97,22 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
                 android:layout_marginEnd="4dp">
                 
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/gpu_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="55dp"
                     android:layout_gravity="bottom"
-                    android:alpha="0.5" />
+                    android:alpha="0.4" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="10dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                         <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_gpu" android:tint="#FFD700" />
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="GPU" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
@@ -123,27 +126,27 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
                 android:layout_marginStart="4dp">
                 
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/fps_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="40dp"
+                    android:layout_height="55dp"
                     android:layout_gravity="bottom"
-                    android:alpha="0.5" />
+                    android:alpha="0.4" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="8dp">
+                    android:padding="10dp">
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
                         <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_fps" android:tint="#00FFFF" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="REAL FPS" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="FPS" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
-                    <TextView android:id="@+id/fps_counter" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="--" android:textColor="#00FFFF" android:textSize="22sp" android:textStyle="bold" />
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="FPS" android:textColor="#666666" android:textSize="9sp" />
+                    <TextView android:id="@+id/fps_counter" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:fontFamily="monospace" android:text="--" android:textColor="#00FFFF" android:textSize="28sp" android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>

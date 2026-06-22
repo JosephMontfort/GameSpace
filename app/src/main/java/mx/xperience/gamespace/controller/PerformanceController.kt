@@ -72,29 +72,27 @@ class PerformanceController(private val context: Context) {
         view.findViewById<TextView>(R.id.btn_performance)?.setOnClickListener { setMode(PerformanceMode.PERFORMANCE, true) }
         view.findViewById<TextView>(R.id.btn_turbo)?.setOnClickListener { setMode(PerformanceMode.TURBO, true) }
 
+        // Use MATCH_PARENT so the entire screen can capture "tap outside" gestures
         windowParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.TOP
-            x = 24
-            y = 50
+            x = 0
+            y = 0
         }
 
-        // Listen for touches outside the overlay to collapse it automatically
-        panelView.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_OUTSIDE) {
-                onRequestCollapse?.invoke()
-                true
-            } else {
-                false
-            }
+        // Collapse overlay when tapping the transparent root frame
+        panelView.setOnClickListener {
+            onRequestCollapse?.invoke()
         }
+        
+        // Consume taps strictly inside the dark panel so it doesn't close
+        panelView.findViewById<View>(R.id.panel_background)?.setOnClickListener { }
     }
 
     fun startForegroundMonitoring(onPackage: (String) -> Unit) {
@@ -109,11 +107,22 @@ class PerformanceController(private val context: Context) {
     fun updatePanelGravity() {
         val displayMetrics = context.resources.displayMetrics
         val isLeft = triggerWindowParams.x < displayMetrics.widthPixels / 2
-        windowParams.gravity = Gravity.TOP or (if (isLeft) Gravity.START else Gravity.END)
-        try {
-            val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            wm.updateViewLayout(panelView, windowParams)
-        } catch (e: Exception) {}
+        val panelBg = panelView.findViewById<View>(R.id.panel_background)
+        val params = panelBg?.layoutParams as? android.widget.FrameLayout.LayoutParams
+        if (params != null) {
+            params.gravity = Gravity.TOP or (if (isLeft) Gravity.START else Gravity.END)
+            val marginX = (12 * displayMetrics.density).toInt()
+            val marginY = (24 * displayMetrics.density).toInt()
+            if (isLeft) {
+                params.leftMargin = marginX
+                params.rightMargin = 0
+            } else {
+                params.leftMargin = 0
+                params.rightMargin = marginX
+            }
+            params.topMargin = marginY
+            panelBg.layoutParams = params
+        }
     }
 
     fun onPanelOpened() {
@@ -153,7 +162,7 @@ class PerformanceController(private val context: Context) {
                 val currentFps = fpsMonitor.getCurrentFps()
                 fpsText?.text = currentFps.toString()
                 val fpsWave = panelView.findViewById<WaveView>(R.id.fps_chart)
-                fpsWave?.setWaveAmplitude((currentFps / 120f).coerceIn(0.1f, 1.0f))
+                fpsWave?.setWaveAmplitude((currentFps / 120f).coerceIn(0.1f, 0.85f))
                 fpsWave?.setWaveColor(Color.parseColor("#00FFFF"))
                 gpuUpdateUI()
                 updateRamUI()
@@ -210,7 +219,7 @@ class PerformanceController(private val context: Context) {
         panelView.findViewById<TextView>(R.id.gpu_val)?.text = gpuFreq.first.toString() + " MHz"
         panelView.findViewById<TextView>(R.id.gpu_temp)?.text = gpuFreq.second
         val gpuWave = panelView.findViewById<WaveView>(R.id.gpu_chart)
-        gpuWave?.setWaveAmplitude((gpuFreq.first / 1000f).coerceIn(0.2f, 0.8f))
+        gpuWave?.setWaveAmplitude((gpuFreq.first / 1000f).coerceIn(0.2f, 0.85f))
         gpuWave?.setWaveColor(Color.parseColor("#f74a7b"))
     }
 
@@ -225,12 +234,12 @@ class PerformanceController(private val context: Context) {
         panelView.findViewById<TextView>(R.id.cpu_little_val)?.text = String.format("%.2f", freqs.first / 1000000.0) + " GHz"
         panelView.findViewById<TextView>(R.id.cpu_little_temp)?.text = temp
         val littleWave = panelView.findViewById<WaveView>(R.id.cpu_little_chart)
-        if (cpuLittleMaxLimit > 0) littleWave?.setWaveAmplitude((freqs.first.toFloat() / cpuLittleMaxLimit.toFloat()).coerceIn(0.1f, 1.0f))
+        if (cpuLittleMaxLimit > 0) littleWave?.setWaveAmplitude((freqs.first.toFloat() / cpuLittleMaxLimit.toFloat()).coerceIn(0.1f, 0.85f))
         littleWave?.setWaveColor(Color.parseColor("#00FF41"))
         panelView.findViewById<TextView>(R.id.cpu_big_val)?.text = String.format("%.2f", freqs.second / 1000000.0) + " GHz"
         panelView.findViewById<TextView>(R.id.cpu_big_temp)?.text = temp
         val bigWave = panelView.findViewById<WaveView>(R.id.cpu_big_chart)
-        if (cpuBigMaxLimit > 0) bigWave?.setWaveAmplitude((freqs.second.toFloat() / cpuBigMaxLimit.toFloat()).coerceIn(0.1f, 1.0f))
+        if (cpuBigMaxLimit > 0) bigWave?.setWaveAmplitude((freqs.second.toFloat() / cpuBigMaxLimit.toFloat()).coerceIn(0.1f, 0.85f))
         bigWave?.setWaveColor(Color.parseColor("#FF00FF"))
     }
 
