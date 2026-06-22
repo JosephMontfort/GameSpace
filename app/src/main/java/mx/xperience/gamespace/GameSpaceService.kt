@@ -86,7 +86,7 @@ class GameSpaceService : Service() {
      */
     private fun initOverlay() {
         overlayView = LayoutInflater.from(this)
-        .inflate(R.layout.overlay_game_panel_original, null)
+        .inflate(R.layout.overlay_game_panel, null)
 
         controller.bindOverlay(overlayView)
         windowManager.addView(overlayView, controller.windowParams)
