@@ -21,8 +21,8 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Generate Wrapper on Runner
-        run: gradle wrapper
+      - name: Generate Wrapper on Runner (Pin to 8.4)
+        run: gradle wrapper --gradle-version 8.4
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
