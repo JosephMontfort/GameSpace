@@ -7,5 +7,4 @@
 -->
 <full-backup-content>
     <include domain="sharedpref" path="gamespace_prefs.xml"/>
-    <exclude domain="root" path="cache"/>
 </full-backup-content>
