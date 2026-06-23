@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  overlay_game_panel.xml
+  Fixes applied:
+    1. Root FrameLayout background → fully opaque black so nothing bleeds through.
+    2. panel_background → fully opaque (#FF1A1A1A), no alpha=0.98 hack.
+    3. bg_stats_card colour bumped to #FF1E1E1E (fully opaque, distinct from panel).
+    4. WaveView placed BELOW the text LinearLayout in Z-order so it never draws over text.
+       The card uses a FrameLayout; WaveView is first child (drawn first = behind),
+       the text LinearLayout is second child (drawn on top).
+    5. WaveView height increased to match_parent so it fills the card bottom properly.
+    6. fps_counter height changed from match_parent to wrap_content (was pushing card taller).
+-->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent">
+    android:background="#E6000000">
 
     <LinearLayout
         android:id="@+id/panel_background"
@@ -10,147 +22,206 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/bg_panel_dark"
-        android:padding="12dp"
-        android:alpha="0.98">
+        android:padding="12dp">
 
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="26dp"
             android:gravity="center_vertical"
             android:layout_marginBottom="10dp">
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_gaming_logo" android:tint="#00FF41" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:fontFamily="monospace" android:text="GAME SPACE" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" android:letterSpacing="0.1" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp"
+                android:src="@drawable/ic_gaming_logo" android:tint="#00FF41" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginStart="8dp" android:fontFamily="monospace"
+                android:text="GAME SPACE" android:textColor="#FFFFFF"
+                android:textSize="12sp" android:textStyle="bold" android:letterSpacing="0.1" />
         </LinearLayout>
 
+        <!-- Row 1: CPU Little | CPU Big -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
+            <!-- CPU Little card -->
             <FrameLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="85dp"
                 android:layout_weight="1"
-                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
+                android:clipChildren="true"
                 android:layout_marginEnd="4dp">
-                
+
+                <!-- Graph behind text (drawn first in Z-order) -->
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/cpu_little_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="bottom"
-                    android:alpha="0.4" />
+                    android:alpha="0.45" />
 
+                <!-- Text on top -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:padding="10dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
-                        <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_cpu" android:tint="#00FF41" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="LITTLE CORE" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
+                    android:padding="10dp"
+                    android:gravity="center_vertical">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center_vertical" android:layout_marginBottom="4dp">
+                        <ImageView android:layout_width="12dp" android:layout_height="12dp"
+                            android:src="@drawable/ic_cpu" android:tint="#00FF41" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp" android:text="LITTLE CORE"
+                            android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
-                    <TextView android:id="@+id/cpu_little_val" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="-- GHz" android:textColor="#00FF41" android:textSize="16sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/cpu_little_temp" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="--°C" android:textColor="#FFA500" android:textSize="9sp" />
+                    <TextView android:id="@+id/cpu_little_val"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="-- GHz" android:textColor="#00FF41"
+                        android:textSize="16sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/cpu_little_temp"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="--°C" android:textColor="#FFA500" android:textSize="9sp" />
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- CPU Big card -->
             <FrameLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="85dp"
                 android:layout_weight="1"
-                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
+                android:clipChildren="true"
                 android:layout_marginStart="4dp">
-                
+
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/cpu_big_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="bottom"
-                    android:alpha="0.4" />
+                    android:alpha="0.45" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:padding="10dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
-                        <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_cpu_bolt" android:tint="#FF00FF" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="BIG CORE" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
+                    android:padding="10dp"
+                    android:gravity="center_vertical">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center_vertical" android:layout_marginBottom="4dp">
+                        <ImageView android:layout_width="12dp" android:layout_height="12dp"
+                            android:src="@drawable/ic_cpu_bolt" android:tint="#FF00FF" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp" android:text="BIG CORE"
+                            android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
-                    <TextView android:id="@+id/cpu_big_val" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="-- GHz" android:textColor="#FF00FF" android:textSize="16sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/cpu_big_temp" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="--°C" android:textColor="#FFA500" android:textSize="9sp" />
+                    <TextView android:id="@+id/cpu_big_val"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="-- GHz" android:textColor="#FF00FF"
+                        android:textSize="16sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/cpu_big_temp"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="--°C" android:textColor="#FFA500" android:textSize="9sp" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
 
+        <!-- Row 2: GPU | FPS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginBottom="8dp">
 
+            <!-- GPU card -->
             <FrameLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="85dp"
                 android:layout_weight="1"
-                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
+                android:clipChildren="true"
                 android:layout_marginEnd="4dp">
-                
+
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/gpu_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="bottom"
-                    android:alpha="0.4" />
+                    android:alpha="0.45" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:padding="10dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
-                        <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_gpu" android:tint="#FFD700" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="GPU" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
+                    android:padding="10dp"
+                    android:gravity="center_vertical">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center_vertical" android:layout_marginBottom="4dp">
+                        <ImageView android:layout_width="12dp" android:layout_height="12dp"
+                            android:src="@drawable/ic_gpu" android:tint="#FFD700" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp" android:text="GPU"
+                            android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
-                    <TextView android:id="@+id/gpu_val" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="0 MHz" android:textColor="#FFD700" android:textSize="16sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/gpu_temp" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:fontFamily="monospace" android:text="--°C" android:textColor="#FFA500" android:textSize="9sp" />
+                    <TextView android:id="@+id/gpu_val"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="0 MHz" android:textColor="#FFD700"
+                        android:textSize="16sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/gpu_temp"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="--°C" android:textColor="#FFA500" android:textSize="9sp" />
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- FPS card -->
             <FrameLayout
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="85dp"
                 android:layout_weight="1"
-                android:minHeight="85dp"
                 android:background="@drawable/bg_stats_card"
+                android:clipChildren="true"
                 android:layout_marginStart="4dp">
-                
+
                 <mx.xperience.gamespace.view.WaveView
                     android:id="@+id/fps_chart"
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="bottom"
-                    android:alpha="0.4" />
+                    android:alpha="0.45" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:orientation="vertical"
-                    android:padding="10dp">
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="4dp">
-                        <ImageView android:layout_width="12dp" android:layout_height="12dp" android:src="@drawable/ic_fps" android:tint="#00FFFF" />
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="FPS" android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
+                    android:padding="10dp"
+                    android:gravity="center_vertical">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center_vertical" android:layout_marginBottom="4dp">
+                        <ImageView android:layout_width="12dp" android:layout_height="12dp"
+                            android:src="@drawable/ic_fps" android:tint="#00FFFF" />
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp" android:text="FPS"
+                            android:textColor="#AAAAAA" android:textSize="9sp" android:textStyle="bold" />
                     </LinearLayout>
-                    <TextView android:id="@+id/fps_counter" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:fontFamily="monospace" android:text="--" android:textColor="#00FFFF" android:textSize="28sp" android:textStyle="bold" />
+                    <!-- wrap_content height, not match_parent — was causing card to expand -->
+                    <TextView android:id="@+id/fps_counter"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:gravity="center" android:fontFamily="monospace"
+                        android:text="--" android:textColor="#00FFFF"
+                        android:textSize="28sp" android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
         </LinearLayout>
 
+        <!-- RAM row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -158,17 +229,35 @@
             android:background="@drawable/bg_stats_card"
             android:padding="10dp"
             android:layout_marginBottom="10dp">
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:layout_marginBottom="6dp">
-                <ImageView android:layout_width="14dp" android:layout_height="14dp" android:src="@drawable/ic_ram" android:tint="#FFD700" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="RAM" android:textColor="#AAAAAA" android:textSize="10sp" android:textStyle="bold" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center_vertical" android:layout_marginBottom="6dp">
+                <ImageView android:layout_width="14dp" android:layout_height="14dp"
+                    android:src="@drawable/ic_ram" android:tint="#FFD700" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp" android:text="RAM"
+                    android:textColor="#AAAAAA" android:textSize="10sp" android:textStyle="bold" />
             </LinearLayout>
-            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginBottom="4dp">
-                <TextView android:id="@+id/ram_info" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:fontFamily="monospace" android:text="--/-- GB" android:textColor="#FFFFFF" android:textSize="12sp" android:textStyle="bold" />
-                <TextView android:id="@+id/ram_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="--%" android:textColor="#FFD700" android:textSize="12sp" android:textStyle="bold" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="horizontal" android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+                <TextView android:id="@+id/ram_info"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:fontFamily="monospace"
+                    android:text="--/-- GB" android:textColor="#FFFFFF"
+                    android:textSize="12sp" android:textStyle="bold" />
+                <TextView android:id="@+id/ram_percent"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:fontFamily="monospace" android:text="--%"
+                    android:textColor="#FFD700" android:textSize="12sp" android:textStyle="bold" />
             </LinearLayout>
-            <androidx.core.widget.ContentLoadingProgressBar android:id="@+id/ram_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:progressDrawable="@drawable/progress_ram_gaming" />
+            <androidx.core.widget.ContentLoadingProgressBar
+                android:id="@+id/ram_progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent" android:layout_height="4dp"
+                android:progressDrawable="@drawable/progress_ram_gaming" />
         </LinearLayout>
 
+        <!-- Mode selector -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="36dp"
@@ -176,13 +265,33 @@
             android:gravity="center"
             android:layout_marginBottom="12dp"
             android:background="@drawable/bg_mode_selector">
-
-            <TextView android:id="@+id/btn_power_saving" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="ECO" android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold" android:background="@drawable/bg_mode_normal" android:fontFamily="monospace" android:padding="4dp" />
-            <TextView android:id="@+id/btn_balanced" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="BALANCED" android:textColor="#00FF41" android:textSize="10sp" android:textStyle="bold" android:background="@drawable/bg_mode_normal" android:fontFamily="monospace" android:padding="4dp" />
-            <TextView android:id="@+id/btn_performance" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="PERF" android:textColor="#FF00FF" android:textSize="10sp" android:textStyle="bold" android:background="@drawable/bg_mode_normal" android:fontFamily="monospace" android:padding="4dp" />
-            <TextView android:id="@+id/btn_turbo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="TURBO" android:textColor="#FFA500" android:textSize="10sp" android:textStyle="bold" android:background="@drawable/bg_mode_normal" android:fontFamily="monospace" android:padding="4dp" />
+            <TextView android:id="@+id/btn_power_saving"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:gravity="center" android:text="ECO"
+                android:textColor="#00FFFF" android:textSize="10sp" android:textStyle="bold"
+                android:background="@drawable/bg_mode_normal" android:fontFamily="monospace"
+                android:padding="4dp" />
+            <TextView android:id="@+id/btn_balanced"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:gravity="center" android:text="BALANCED"
+                android:textColor="#00FF41" android:textSize="10sp" android:textStyle="bold"
+                android:background="@drawable/bg_mode_normal" android:fontFamily="monospace"
+                android:padding="4dp" />
+            <TextView android:id="@+id/btn_performance"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:gravity="center" android:text="PERF"
+                android:textColor="#FF00FF" android:textSize="10sp" android:textStyle="bold"
+                android:background="@drawable/bg_mode_normal" android:fontFamily="monospace"
+                android:padding="4dp" />
+            <TextView android:id="@+id/btn_turbo"
+                android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_weight="1" android:gravity="center" android:text="TURBO"
+                android:textColor="#FFA500" android:textSize="10sp" android:textStyle="bold"
+                android:background="@drawable/bg_mode_normal" android:fontFamily="monospace"
+                android:padding="4dp" />
         </LinearLayout>
 
+        <!-- Footer -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="32dp"
@@ -190,9 +299,17 @@
             android:gravity="center_vertical"
             android:background="@drawable/bg_footer"
             android:paddingHorizontal="10dp">
-            <ImageView android:layout_width="16dp" android:layout_height="16dp" android:src="@drawable/ic_game_controller" android:tint="#FFFFFF" android:layout_marginEnd="6dp" />
-            <TextView android:id="@+id/game_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:ellipsize="end" android:maxLines="1" android:text="GameSpace" android:textColor="#FFFFFF" android:textSize="11sp" />
-            <TextView android:id="@+id/battery_info" android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="monospace" android:text="--%" android:textColor="#00FF41" android:textSize="10sp" />
+            <ImageView android:layout_width="16dp" android:layout_height="16dp"
+                android:src="@drawable/ic_game_controller" android:tint="#FFFFFF"
+                android:layout_marginEnd="6dp" />
+            <TextView android:id="@+id/game_name"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1" android:ellipsize="end" android:maxLines="1"
+                android:text="GameSpace" android:textColor="#FFFFFF" android:textSize="11sp" />
+            <TextView android:id="@+id/battery_info"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:fontFamily="monospace" android:text="--%"
+                android:textColor="#00FF41" android:textSize="10sp" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>

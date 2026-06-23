@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-      Copyright (C) 2026 The XPerience Project
-      SPDX-License-Identifier: Apache-2.0
- -->
+  Copyright (C) 2026 The XPerience Project
+  SPDX-License-Identifier: Apache-2.0
+
+  Panel background: fully opaque dark surface (#FF = 100% alpha).
+  Previously #CC (80%) which caused the panel to look transparent
+  when overlaid on bright game content.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#CC1A1A1A" />  <!-- 80% opacidad -->
+    <solid android:color="#FF111111" />
     <corners android:radius="14dp" />
-    <stroke android:width="0.8dp" android:color="#333333" />
+    <stroke android:width="0.8dp" android:color="#2A2A2A" />
 </shape>

@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Stats card background: fully opaque, lighter than the panel (#1E1E1E vs #111111)
+  so each card appears "projected" / elevated above the overall panel surface.
+  Previously #EE (93%) — still semi-transparent, colours bleed through.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#EE1A1A1A" />
+    <solid android:color="#FF1E1E1E" />
     <corners android:radius="8dp" />
+    <stroke android:width="0.5dp" android:color="#303030" />
 </shape>
