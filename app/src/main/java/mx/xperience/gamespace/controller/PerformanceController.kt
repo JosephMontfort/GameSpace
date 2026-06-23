@@ -97,22 +97,13 @@ class PerformanceController(private val context: Context) {
         view.findViewById<TextView>(R.id.btn_performance)?.setOnClickListener { setMode(PerformanceMode.PERFORMANCE, true) }
         view.findViewById<TextView>(R.id.btn_turbo)?.setOnClickListener       { setMode(PerformanceMode.TURBO, true) }
 
-        // FIX: Using MATCH_PARENT with PixelFormat.TRANSLUCENT causes Android to apply
-        // a full-screen dim behind the window — the game becomes invisible.
-        // The correct approach: keep the window MATCH_PARENT so the transparent root
-        // FrameLayout can catch outside-tap-to-close gestures, but add:
-        //   FLAG_NOT_TOUCH_MODAL  → outside touches are NOT blocked/dimmed by this window
-        //   FLAG_WATCH_OUTSIDE_TOUCH → we still receive ACTION_OUTSIDE so we can collapse
-        // and use PixelFormat.RGBA_8888 instead of TRANSLUCENT (avoids the implicit dim).
         windowParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.RGBA_8888
+            PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.TOP
             x = 0; y = 0
