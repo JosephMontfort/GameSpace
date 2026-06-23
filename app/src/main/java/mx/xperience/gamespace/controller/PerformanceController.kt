@@ -97,13 +97,22 @@ class PerformanceController(private val context: Context) {
         view.findViewById<TextView>(R.id.btn_performance)?.setOnClickListener { setMode(PerformanceMode.PERFORMANCE, true) }
         view.findViewById<TextView>(R.id.btn_turbo)?.setOnClickListener       { setMode(PerformanceMode.TURBO, true) }
 
+        // FIX: Using MATCH_PARENT with PixelFormat.TRANSLUCENT causes Android to apply
+        // a full-screen dim behind the window — the game becomes invisible.
+        // The correct approach: keep the window MATCH_PARENT so the transparent root
+        // FrameLayout can catch outside-tap-to-close gestures, but add:
+        //   FLAG_NOT_TOUCH_MODAL  → outside touches are NOT blocked/dimmed by this window
+        //   FLAG_WATCH_OUTSIDE_TOUCH → we still receive ACTION_OUTSIDE so we can collapse
+        // and use PixelFormat.RGBA_8888 instead of TRANSLUCENT (avoids the implicit dim).
         windowParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH or
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-            PixelFormat.TRANSLUCENT
+            PixelFormat.RGBA_8888
         ).apply {
             gravity = Gravity.START or Gravity.TOP
             x = 0; y = 0
@@ -351,13 +360,18 @@ class PerformanceController(private val context: Context) {
     }
 
     fun createTriggerParams(): WindowManager.LayoutParams {
-        val displayMetrics = context.resources.displayMetrics
-        val viewSize  = (48 * displayMetrics.density).toInt()
-        val screenW   = displayMetrics.widthPixels
-        val screenH   = displayMetrics.heightPixels
-        val defaultY  = (200 * displayMetrics.density).toInt()
+        // FIX: always read current display metrics — not a cached copy — so landscape
+        // rotation gives the correct widthPixels/heightPixels for this orientation.
+        val dm = context.resources.displayMetrics
+        val viewSize = (48 * dm.density).toInt()
+        val screenW  = dm.widthPixels
+        val screenH  = dm.heightPixels
+        val defaultY = (200 * dm.density).toInt()
 
-        val savedX = prefs.getInt("trigger_x", screenW)
+        // FIX: default savedX was `screenW` (one pixel off the right edge, partially
+        // off-screen). Default to `screenW - viewSize` so the dot starts fully on screen
+        // flush to the right edge.
+        val savedX = prefs.getInt("trigger_x", screenW - viewSize)
         val savedY = prefs.getInt("trigger_y", defaultY)
 
         return WindowManager.LayoutParams(
@@ -380,9 +394,11 @@ class PerformanceController(private val context: Context) {
         var isDragging = false
         val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
 
-        val displayMetrics = context.resources.displayMetrics
-        val screenW = displayMetrics.widthPixels
-        val screenH = displayMetrics.heightPixels
+        // FIX: do NOT cache screenW/screenH here. The trigger is set up once but the
+        // game can run in landscape — the cached portrait dimensions make the right-edge
+        // clamp stop at the landscape centre (portrait width ≈ landscape height) and the
+        // dot can never reach the actual right edge in landscape.
+        // Read fresh from resources on every MOVE and UP event instead.
 
         triggerView.setOnTouchListener { _, event ->
             when (event.action) {
@@ -398,18 +414,22 @@ class PerformanceController(private val context: Context) {
                     if (!isDragging && (Math.abs(dx) > touchSlop || Math.abs(dy) > touchSlop))
                         isDragging = true
                     if (isDragging) {
+                        // Fresh metrics every move so landscape width is correct
+                        val dm = context.resources.displayMetrics
                         triggerWindowParams.x = (initialX + dx).toInt()
-                            .coerceIn(0, screenW - triggerView.width)
+                            .coerceIn(0, dm.widthPixels - triggerView.width)
                         triggerWindowParams.y = (initialY + dy).toInt()
-                            .coerceIn(0, screenH - triggerView.height)
+                            .coerceIn(0, dm.heightPixels - triggerView.height)
                         windowManager.updateViewLayout(triggerView, triggerWindowParams)
                         true
                     } else false
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     if (isDragging) {
-                        // Snap to nearest edge
-                        val isLeft = triggerWindowParams.x < screenW / 2
+                        val dm = context.resources.displayMetrics
+                        val screenW = dm.widthPixels
+                        // Snap to nearest horizontal edge
+                        val isLeft = triggerWindowParams.x + triggerView.width / 2 < screenW / 2
                         triggerWindowParams.x = if (isLeft) 0 else screenW - triggerView.width
                         windowManager.updateViewLayout(triggerView, triggerWindowParams)
                         prefs.edit()

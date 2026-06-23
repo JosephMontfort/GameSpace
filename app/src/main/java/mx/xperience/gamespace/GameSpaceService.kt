@@ -91,26 +91,18 @@ class GameSpaceService : Service() {
         controller.bindOverlay(overlayView)
         windowManager.addView(overlayView, controller.windowParams)
 
-        overlayView.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                val panelBackground = overlayView.findViewById<View>(R.id.panel_background)
-                val location = IntArray(2)
-                panelBackground.getLocationOnScreen(location)
-                val panelRect = android.graphics.Rect(
-                    location[0],
-                    location[1],
-                    location[0] + panelBackground.width,
-                    location[1] + panelBackground.height
-                )
-
-                if (!panelRect.contains(event.rawX.toInt(), event.rawY.toInt())) {
-                    // Toque fuera del panel → cerrar
-                    overlayView.visibility = View.GONE
-                    triggerView.visibility = View.VISIBLE
-                    return@setOnTouchListener true
-                }
+        // FIX: FLAG_NOT_TOUCH_MODAL means the system no longer routes outside taps through
+        // this window at all (they go straight to the game underneath).
+        // FLAG_WATCH_OUTSIDE_TOUCH delivers a single ACTION_OUTSIDE event for any tap
+        // that lands outside our window bounds — use that to collapse the panel.
+        overlayView.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_OUTSIDE) {
+                overlayView.visibility = View.GONE
+                triggerView.visibility = View.VISIBLE
+                true
+            } else {
+                false
             }
-            false
         }
 
         overlayView.visibility = View.GONE
