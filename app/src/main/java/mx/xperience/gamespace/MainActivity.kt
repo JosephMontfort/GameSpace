@@ -76,10 +76,6 @@ class MainActivity : AppCompatActivity() {
             }
             .sortedBy { it.name.lowercase() }
 
-        // Update game count label
-        findViewById<TextView>(R.id.game_count_label)?.text =
-            "${games.size} game${if (games.size != 1) "s" else ""}"
-
         gameAdapter = GameAdapter(
             games.toMutableList(),
             onClick      = { pkg -> launchGame(pkg) },

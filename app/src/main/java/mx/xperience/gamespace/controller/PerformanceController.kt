@@ -124,19 +124,37 @@ class PerformanceController(private val context: Context) {
     }
 
     fun updatePanelGravity() {
-        val displayMetrics = context.resources.displayMetrics
-        val isLeft = triggerWindowParams.x < displayMetrics.widthPixels / 2
-        val panelBg = panelView.findViewById<View>(R.id.panel_background)
-        val params = panelBg?.layoutParams as? android.widget.FrameLayout.LayoutParams
-        if (params != null) {
-            params.gravity = Gravity.TOP or (if (isLeft) Gravity.START else Gravity.END)
-            val marginX = (12 * displayMetrics.density).toInt()
-            val marginY = (24 * displayMetrics.density).toInt()
-            if (isLeft) { params.leftMargin = marginX; params.rightMargin = 0 }
-            else        { params.leftMargin = 0;       params.rightMargin = marginX }
-            params.topMargin = marginY
-            panelBg.layoutParams = params
-        }
+        val dm = context.resources.displayMetrics
+        val screenW = dm.widthPixels
+        val screenH = dm.heightPixels
+        val density = dm.density
+
+        val dotX = triggerWindowParams.x
+        val dotY = triggerWindowParams.y
+
+        val isLeft   = dotX + (48 * density).toInt() / 2 < screenW / 2
+        // If the dot is in the bottom half, anchor panel to bottom; top half → top
+        val isBottom = dotY + (48 * density).toInt() / 2 > screenH / 2
+
+        val panelBg = panelView.findViewById<View>(R.id.panel_background) ?: return
+        val params  = panelBg.layoutParams as? android.widget.FrameLayout.LayoutParams ?: return
+
+        val marginX = (12 * density).toInt()
+        val marginY = (24 * density).toInt()
+
+        // Horizontal gravity
+        val hGravity = if (isLeft) Gravity.START else Gravity.END
+        // Vertical gravity: panel appears above the dot when dot is in bottom half
+        val vGravity = if (isBottom) Gravity.BOTTOM else Gravity.TOP
+
+        params.gravity = vGravity or hGravity
+        if (isLeft) { params.leftMargin = marginX; params.rightMargin = 0 }
+        else        { params.leftMargin = 0;       params.rightMargin = marginX }
+        // Vertical margin: distance from the screen edge the dot is near
+        params.topMargin    = if (isBottom) 0          else marginY
+        params.bottomMargin = if (isBottom) marginY    else 0
+
+        panelBg.layoutParams = params
     }
 
     fun onPanelOpened() {
@@ -351,19 +369,25 @@ class PerformanceController(private val context: Context) {
     }
 
     fun createTriggerParams(): WindowManager.LayoutParams {
-        // FIX: always read current display metrics — not a cached copy — so landscape
-        // rotation gives the correct widthPixels/heightPixels for this orientation.
-        val dm = context.resources.displayMetrics
+        val dm       = context.resources.displayMetrics
         val viewSize = (48 * dm.density).toInt()
         val screenW  = dm.widthPixels
         val screenH  = dm.heightPixels
-        val defaultY = (200 * dm.density).toInt()
+        val defaultY = (screenH * 0.3f).toInt()  // 30% down from top
 
-        // FIX: default savedX was `screenW` (one pixel off the right edge, partially
-        // off-screen). Default to `screenW - viewSize` so the dot starts fully on screen
-        // flush to the right edge.
-        val savedX = prefs.getInt("trigger_x", screenW - viewSize)
-        val savedY = prefs.getInt("trigger_y", defaultY)
+        // Clamp saved position to current screen so a stale landscape X doesn't
+        // misplace the dot in portrait (and vice versa). If saved X is clearly
+        // off-screen for the current orientation, discard it and use the default.
+        val rawSavedX = prefs.getInt("trigger_x", screenW - viewSize)
+        val rawSavedY = prefs.getInt("trigger_y", defaultY)
+
+        // Snap saved X to nearest edge (dot should always be on an edge, never floating)
+        val savedX = when {
+            rawSavedX > screenW - viewSize - viewSize -> screenW - viewSize  // was on right edge
+            rawSavedX < viewSize                      -> 0                   // was on left edge
+            else                                      -> screenW - viewSize  // stale/unknown → right edge
+        }
+        val savedY = rawSavedY.coerceIn(0, screenH - viewSize)
 
         return WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
@@ -374,8 +398,8 @@ class PerformanceController(private val context: Context) {
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.START or Gravity.TOP
-            x = savedX.coerceIn(0, screenW - viewSize)
-            y = savedY.coerceIn(0, screenH - viewSize)
+            x = savedX
+            y = savedY
         }
     }
 
