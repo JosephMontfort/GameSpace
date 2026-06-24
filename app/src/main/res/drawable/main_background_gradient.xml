@@ -1,12 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
-      Copyright (C) 2026 The XPerience Project
-      SPDX-License-Identifier: Apache-2.0
- -->
+  Copyright (C) 2026 The XPerience Project
+  SPDX-License-Identifier: Apache-2.0
+  Richer deep-black gradient with a very subtle green top tint.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <gradient
-        android:startColor="#1A1A1A"
-        android:centerColor="#121212"
-        android:endColor="#000000"
+        android:startColor="#0D0F0D"
+        android:centerColor="#0A0C0A"
+        android:endColor="#050505"
         android:angle="270" />
 </shape>

@@ -4,7 +4,7 @@
  */
 package mx.xperience.gamespace
 
-import android.graphics.drawable.Drawable
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,70 +16,114 @@ import com.google.android.material.card.MaterialCardView
 
 class GameAdapter(
     private val games: MutableList<GameModel>,
-        private val onClick: (String) -> Unit,
-        private val onLongClick: (String) -> Unit,
-        private val onAddClick: () -> Unit
+    private val onClick: (String) -> Unit,
+    private val onLongClick: (String) -> Unit,
+    private val onAddClick: () -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        private const val TYPE_GAME = 0
+        private const val TYPE_GAME       = 0
         private const val TYPE_ADD_BUTTON = 1
     }
 
-    override fun getItemViewType(position: Int): Int {
-        // Si la posición es igual al tamaño de la lista, es el botón de añadir
-        return if (position == games.size) TYPE_ADD_BUTTON else TYPE_GAME
-    }
+    // Track last-animated position for entrance animation
+    private var lastAnimatedPosition = -1
+
+    override fun getItemViewType(position: Int) =
+        if (position == games.size) TYPE_ADD_BUTTON else TYPE_GAME
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return if (viewType == TYPE_GAME) {
-            val view = inflater.inflate(R.layout.item_game, parent, false)
-            GameViewHolder(view)
-        } else {
-            val view = inflater.inflate(R.layout.item_game, parent, false) // Reusamos el layout
-            AddViewHolder(view)
-        }
+        val view = inflater.inflate(R.layout.item_game, parent, false)
+        return if (viewType == TYPE_GAME) GameViewHolder(view) else AddViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val context = holder.itemView.context
-        if (holder is GameViewHolder) {
-            val game = games[position]
-            holder.icon.setImageDrawable(game.icon)
-            holder.name.text = game.name
-            holder.itemView.setOnClickListener { onClick(game.packageName) }
+        // Staggered entrance animation — only on first bind, not on scroll-back
+        if (position > lastAnimatedPosition) {
+            val anim = android.view.animation.AnimationUtils.loadAnimation(
+                holder.itemView.context, android.R.anim.fade_in
+            )
+            // Stagger: each item delays 30ms more than the previous
+            anim.startOffset = (position * 30L).coerceAtMost(300L)
+            holder.itemView.startAnimation(anim)
+            lastAnimatedPosition = position
+        }
 
-            // LongClick to delete
-            holder.itemView.setOnLongClickListener {
-                onLongClick(game.packageName)
-                true
+        when (holder) {
+            is GameViewHolder -> {
+                val game = games[position]
+                holder.icon.setImageDrawable(game.icon)
+                holder.name.text = game.name
+
+                // Clean card: no border by default
+                holder.card.strokeWidth = 0
+                holder.card.setCardBackgroundColor(Color.parseColor("#111411"))
+
+                holder.itemView.setOnClickListener {
+                    // Brief press-scale feedback
+                    holder.card.animate()
+                        .scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                        .withEndAction {
+                            holder.card.animate()
+                                .scaleX(1f).scaleY(1f).setDuration(120).start()
+                        }.start()
+                    onClick(game.packageName)
+                }
+                holder.itemView.setOnLongClickListener {
+                    // Green border flash on long-press
+                    holder.card.strokeColor = Color.parseColor("#00FF41")
+                    holder.card.strokeWidth = 2
+                    holder.itemView.postDelayed({
+                        holder.card.strokeWidth = 0
+                    }, 600)
+                    onLongClick(game.packageName)
+                    true
+                }
             }
 
-        } else if (holder is AddViewHolder) {
-            // Configuramos el look de "Añadir"
-            holder.name.text = context.getString(R.string.gs_add_game)
-            holder.card.setCardBackgroundColor(android.graphics.Color.TRANSPARENT)
-            holder.card.setBackgroundResource(R.drawable.bg_add_game)
-            holder.icon.setImageResource(android.R.drawable.ic_input_add) // Icono de +
-            holder.icon.setPadding(40, 40, 40, 40) // Para que el + se vea centrado
-            holder.icon.alpha = 0.6f
+            is AddViewHolder -> {
+                holder.name.text = holder.itemView.context.getString(R.string.gs_add_game)
+                // Dashed green-tinted border card
+                holder.card.setCardBackgroundColor(Color.parseColor("#0D1A0D"))
+                holder.card.strokeColor  = Color.parseColor("#2200FF41")
+                holder.card.strokeWidth  = 2
+                holder.card.cardElevation = 0f
 
-            holder.itemView.setOnClickListener { onAddClick() }
+                // "+" icon — tinted green, slightly transparent
+                holder.icon.setImageResource(android.R.drawable.ic_input_add)
+                holder.icon.setColorFilter(Color.parseColor("#4400FF41"))
+                holder.icon.setPadding(28, 28, 28, 28)
+                holder.icon.alpha = 1f
+
+                holder.itemView.setOnClickListener {
+                    holder.card.animate()
+                        .scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                        .withEndAction {
+                            holder.card.animate()
+                                .scaleX(1f).scaleY(1f).setDuration(120).start()
+                        }.start()
+                    onAddClick()
+                }
+            }
         }
     }
 
     override fun getItemCount() = games.size + 1
 
+    fun resetAnimationTracker() {
+        lastAnimatedPosition = -1
+    }
+
     class GameViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val card: MaterialCardView = view.findViewById(R.id.card_game)
-        val icon: ImageView = view.findViewById(R.id.game_icon)
-        val name: TextView = view.findViewById(R.id.game_name)
+        val icon: ImageView        = view.findViewById(R.id.game_icon)
+        val name: TextView         = view.findViewById(R.id.game_name)
     }
 
     class AddViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val card: MaterialCardView = view.findViewById(R.id.card_game)
-        val icon: ImageView = view.findViewById(R.id.game_icon)
-        val name: TextView = view.findViewById(R.id.game_name)
+        val icon: ImageView        = view.findViewById(R.id.game_icon)
+        val name: TextView         = view.findViewById(R.id.game_name)
     }
 }
