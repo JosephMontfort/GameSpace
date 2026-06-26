@@ -8,7 +8,8 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
+import android.view.animation.AlphaAnimation
+import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -22,108 +23,89 @@ class GameAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        private const val TYPE_GAME       = 0
-        private const val TYPE_ADD_BUTTON = 1
+        private const val TYPE_GAME = 0
+        private const val TYPE_ADD  = 1
     }
 
-    // Track last-animated position for entrance animation
     private var lastAnimatedPosition = -1
 
-    override fun getItemViewType(position: Int) =
-        if (position == games.size) TYPE_ADD_BUTTON else TYPE_GAME
+    override fun getItemViewType(pos: Int) = if (pos < games.size) TYPE_GAME else TYPE_ADD
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
-        val view = inflater.inflate(R.layout.item_game, parent, false)
-        return if (viewType == TYPE_GAME) GameViewHolder(view) else AddViewHolder(view)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_game, parent, false)
+        return if (viewType == TYPE_GAME) GameVH(view) else AddVH(view)
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        // Staggered entrance animation — only on first bind, not on scroll-back
-        if (position > lastAnimatedPosition) {
-            val anim = android.view.animation.AnimationUtils.loadAnimation(
-                holder.itemView.context, android.R.anim.fade_in
-            )
-            // Stagger: each item delays 30ms more than the previous
-            anim.startOffset = (position * 30L).coerceAtMost(300L)
-            holder.itemView.startAnimation(anim)
-            lastAnimatedPosition = position
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, pos: Int) {
+        // Staggered fade-in on first appearance only
+        if (pos > lastAnimatedPosition) {
+            AlphaAnimation(0f, 1f).apply {
+                duration      = 220
+                startOffset   = (pos * 25L).coerceAtMost(250L)
+                interpolator  = DecelerateInterpolator()
+                holder.itemView.startAnimation(this)
+            }
+            lastAnimatedPosition = pos
         }
 
         when (holder) {
-            is GameViewHolder -> {
-                val game = games[position]
+            is GameVH -> {
+                val game = games[pos]
                 holder.icon.setImageDrawable(game.icon)
                 holder.name.text = game.name
-
-                // Clean card: no border by default
-                holder.card.strokeWidth = 0
-                holder.card.setCardBackgroundColor(Color.parseColor("#111411"))
+                holder.card.setCardBackgroundColor(Color.parseColor("#141714"))
+                holder.card.strokeWidth = 1
+                holder.card.strokeColor = Color.parseColor("#1E2A1E")
 
                 holder.itemView.setOnClickListener {
-                    // Brief press-scale feedback
-                    holder.card.animate()
-                        .scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                    holder.card.animate().scaleX(0.90f).scaleY(0.90f).setDuration(70)
                         .withEndAction {
-                            holder.card.animate()
-                                .scaleX(1f).scaleY(1f).setDuration(120).start()
+                            holder.card.animate().scaleX(1f).scaleY(1f).setDuration(130).start()
                         }.start()
                     onClick(game.packageName)
                 }
                 holder.itemView.setOnLongClickListener {
-                    // Green border flash on long-press
                     holder.card.strokeColor = Color.parseColor("#00FF41")
                     holder.card.strokeWidth = 2
-                    holder.itemView.postDelayed({
-                        holder.card.strokeWidth = 0
-                    }, 600)
+                    holder.itemView.postDelayed({ holder.card.strokeWidth = 1; holder.card.strokeColor = Color.parseColor("#1E2A1E") }, 500)
                     onLongClick(game.packageName)
                     true
                 }
             }
-
-            is AddViewHolder -> {
+            is AddVH -> {
                 holder.name.text = holder.itemView.context.getString(R.string.gs_add_game)
-                // Dashed green-tinted border card
-                holder.card.setCardBackgroundColor(Color.parseColor("#0D1A0D"))
-                holder.card.strokeColor  = Color.parseColor("#2200FF41")
-                holder.card.strokeWidth  = 2
+                holder.card.setCardBackgroundColor(Color.parseColor("#0D140D"))
+                holder.card.strokeColor = Color.parseColor("#1A3A1A")
+                holder.card.strokeWidth = 1
                 holder.card.cardElevation = 0f
-
-                // "+" icon — tinted green, slightly transparent
                 holder.icon.setImageResource(android.R.drawable.ic_input_add)
-                holder.icon.setColorFilter(Color.parseColor("#4400FF41"))
-                holder.icon.setPadding(28, 28, 28, 28)
-                holder.icon.alpha = 1f
-
+                holder.icon.setColorFilter(Color.parseColor("#3300FF41"))
+                holder.icon.setPadding(22, 22, 22, 22)
                 holder.itemView.setOnClickListener {
-                    holder.card.animate()
-                        .scaleX(0.92f).scaleY(0.92f).setDuration(80)
+                    holder.card.animate().scaleX(0.90f).scaleY(0.90f).setDuration(70)
                         .withEndAction {
-                            holder.card.animate()
-                                .scaleX(1f).scaleY(1f).setDuration(120).start()
+                            holder.card.animate().scaleX(1f).scaleY(1f).setDuration(130).start()
                         }.start()
                     onAddClick()
                 }
+                holder.itemView.setOnLongClickListener(null)
             }
         }
     }
 
     override fun getItemCount() = games.size + 1
 
-    fun resetAnimationTracker() {
-        lastAnimatedPosition = -1
+    fun resetAnimations() { lastAnimatedPosition = -1 }
+
+    class GameVH(v: View) : RecyclerView.ViewHolder(v) {
+        val card: MaterialCardView = v.findViewById(R.id.card_game)
+        val icon: ImageView        = v.findViewById(R.id.game_icon)
+        val name: TextView         = v.findViewById(R.id.game_name)
     }
 
-    class GameViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val card: MaterialCardView = view.findViewById(R.id.card_game)
-        val icon: ImageView        = view.findViewById(R.id.game_icon)
-        val name: TextView         = view.findViewById(R.id.game_name)
-    }
-
-    class AddViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val card: MaterialCardView = view.findViewById(R.id.card_game)
-        val icon: ImageView        = view.findViewById(R.id.game_icon)
-        val name: TextView         = view.findViewById(R.id.game_name)
+    class AddVH(v: View) : RecyclerView.ViewHolder(v) {
+        val card: MaterialCardView = v.findViewById(R.id.card_game)
+        val icon: ImageView        = v.findViewById(R.id.game_icon)
+        val name: TextView         = v.findViewById(R.id.game_name)
     }
 }
