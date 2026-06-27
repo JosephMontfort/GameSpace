@@ -9,16 +9,13 @@ import android.util.AttributeSet
 import android.widget.ScrollView
 
 /**
- * A ScrollView that caps its own height at a fraction of the display height.
+ * A ScrollView that caps its own height to fit between the status bar and
+ * the bottom of the screen, with a small bottom margin.
  *
- * When used inside a MATCH_PARENT overlay window, a plain ScrollView with
- * wrap_content height will expand to full content size and never actually
- * scroll — because no ancestor view constrains its height.
- *
- * This view caps itself at [maxHeightFraction] × display height during
- * onMeasure, forcing the system to scroll content beyond that cap.
- * Default fraction = 0.88 (88% of screen height), leaving equal visible
- * margins above and below in landscape.
+ * displayMetrics.heightPixels includes the status bar area, so a plain
+ * fraction of that value lets the panel overlap the status bar in landscape.
+ * We read the real status bar height via the "status_bar_height" dimen
+ * resource and subtract it (plus a small bottom pad) from the available space.
  */
 class MaxHeightScrollView @JvmOverloads constructor(
     context: Context,
@@ -26,11 +23,22 @@ class MaxHeightScrollView @JvmOverloads constructor(
     defStyle: Int = 0
 ) : ScrollView(context, attrs, defStyle) {
 
-    var maxHeightFraction: Float = 0.88f
+    /** Extra bottom padding below the panel (dp). */
+    var bottomPadDp: Float = 12f
+
+    private fun statusBarHeight(): Int {
+        val resId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resId > 0) resources.getDimensionPixelSize(resId) else 0
+    }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val displayH = context.resources.displayMetrics.heightPixels
-        val maxH = (displayH * maxHeightFraction).toInt()
+        val density   = resources.displayMetrics.density
+        val displayH  = resources.displayMetrics.heightPixels
+        val sbHeight  = statusBarHeight()
+        val bottomPad = (bottomPadDp * density).toInt()
+
+        // Available height = full display minus status bar minus bottom pad
+        val maxH = (displayH - sbHeight - bottomPad).coerceAtLeast(200)
         val cappedSpec = MeasureSpec.makeMeasureSpec(maxH, MeasureSpec.AT_MOST)
         super.onMeasure(widthMeasureSpec, cappedSpec)
     }

@@ -139,16 +139,22 @@ class PerformanceController(private val context: Context) {
         val panelBg = panelView.findViewById<View>(R.id.panel_background) ?: return
         val params  = panelBg.layoutParams as? android.widget.FrameLayout.LayoutParams ?: return
 
-        // Equal margin on all sides — MaxHeightScrollView caps height via onMeasure
-        val edgeMargin = (16 * density).toInt()
+        // Read real status bar height so panel never overlaps it
+        val sbResId   = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+        val sbHeight  = if (sbResId > 0) context.resources.getDimensionPixelSize(sbResId) else (24 * density).toInt()
+
+        val sideMargin   = (12 * density).toInt()
+        val bottomMargin = (12 * density).toInt()
 
         params.gravity = (if (isBottom) Gravity.BOTTOM else Gravity.TOP) or
                          (if (isLeft)   Gravity.START  else Gravity.END)
 
-        if (isLeft) { params.leftMargin  = edgeMargin; params.rightMargin = 0 }
-        else        { params.leftMargin  = 0;           params.rightMargin = edgeMargin }
-        params.topMargin    = edgeMargin
-        params.bottomMargin = edgeMargin
+        if (isLeft) { params.leftMargin  = sideMargin; params.rightMargin = 0 }
+        else        { params.leftMargin  = 0;           params.rightMargin = sideMargin }
+
+        // Top: always at least status bar height so we never overlap it
+        params.topMargin    = sbHeight
+        params.bottomMargin = bottomMargin
 
         panelBg.layoutParams = params
     }
