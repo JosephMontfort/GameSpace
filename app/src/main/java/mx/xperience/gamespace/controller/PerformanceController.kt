@@ -124,13 +124,13 @@ class PerformanceController(private val context: Context) {
     }
 
     fun updatePanelGravity() {
-        val dm = context.resources.displayMetrics
-        val screenW  = dm.widthPixels
-        val screenH  = dm.heightPixels
-        val density  = dm.density
+        val dm      = context.resources.displayMetrics
+        val screenW = dm.widthPixels
+        val screenH = dm.heightPixels
+        val density = dm.density
 
-        val dotX = triggerWindowParams.x
-        val dotY = triggerWindowParams.y
+        val dotX    = triggerWindowParams.x
+        val dotY    = triggerWindowParams.y
         val dotSize = (48 * density).toInt()
 
         val isLeft   = dotX + dotSize / 2 < screenW / 2
@@ -139,30 +139,14 @@ class PerformanceController(private val context: Context) {
         val panelBg = panelView.findViewById<View>(R.id.panel_background) ?: return
         val params  = panelBg.layoutParams as? android.widget.FrameLayout.LayoutParams ?: return
 
-        // Equal margin on both sides of the screen (16dp each side)
+        // Equal margin on all sides — MaxHeightScrollView caps height via onMeasure
         val edgeMargin = (16 * density).toInt()
 
-        // Max height = screen height minus equal top+bottom edge margins
-        // This ensures the panel never touches screen edges and scrolls internally
-        val maxPanelH = screenH - edgeMargin * 2
-        panelBg.layoutParams.height = android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-        (panelBg as? android.widget.ScrollView)?.let { sv ->
-            // Constrain scroll view height so it never exceeds available space
-            if (sv.measuredHeight > maxPanelH || sv.layoutParams.height != maxPanelH) {
-                sv.layoutParams.height = maxPanelH
-            }
-        }
+        params.gravity = (if (isBottom) Gravity.BOTTOM else Gravity.TOP) or
+                         (if (isLeft)   Gravity.START  else Gravity.END)
 
-        val hGravity = if (isLeft) Gravity.START else Gravity.END
-        val vGravity = if (isBottom) Gravity.BOTTOM else Gravity.TOP
-
-        params.gravity = vGravity or hGravity
-
-        // Horizontal margins: push panel away from screen edge
         if (isLeft) { params.leftMargin  = edgeMargin; params.rightMargin = 0 }
         else        { params.leftMargin  = 0;           params.rightMargin = edgeMargin }
-
-        // Vertical margins: equal edge margins so spacing is symmetric
         params.topMargin    = edgeMargin
         params.bottomMargin = edgeMargin
 

@@ -5,13 +5,12 @@
     android:background="@android:color/transparent">
 
     <!--
-      panel_background is a ScrollView so content is never clipped in landscape.
-      Fixed width 300dp; height constrained to at most 85% of screen via maxHeight
-      trick: we can't set maxHeight on ScrollView directly, so we wrap in a
-      FrameLayout and constrain it in PerformanceController via updatePanelGravity.
-      The ScrollView itself fills whatever space its FrameLayout parent gives it.
+      MaxHeightScrollView caps itself at 88% of display height during onMeasure.
+      A plain ScrollView with wrap_content inside a MATCH_PARENT window expands
+      to full content size and never actually scrolls — no ancestor constrains it.
+      MaxHeightScrollView self-constrains so the system clips and scrolls correctly.
     -->
-    <ScrollView
+    <mx.xperience.gamespace.view.MaxHeightScrollView
         android:id="@+id/panel_background"
         android:layout_width="300dp"
         android:layout_height="wrap_content"
@@ -301,5 +300,5 @@
             </LinearLayout>
 
         </LinearLayout>
-    </ScrollView>
+    </mx.xperience.gamespace.view.MaxHeightScrollView>
 </FrameLayout>

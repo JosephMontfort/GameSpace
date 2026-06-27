@@ -182,44 +182,46 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAddGameDialog() {
-        val pm = packageManager
-        val manualGames = getManualGames()
-
-        val available = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-            .filter { app ->
-                app.packageName != packageName &&
-                pm.getLaunchIntentForPackage(app.packageName) != null &&
-                !manualGames.contains(app.packageName)
-            }
-            .map { app ->
-                GameModel(
-                    name        = pm.getApplicationLabel(app).toString(),
-                    packageName = app.packageName,
-                    icon        = pm.getApplicationIcon(app)
-                )
-            }
-            .sortedBy { it.name.lowercase() }
-
-        val adapter = object : android.widget.ArrayAdapter<GameModel>(
-            this, R.layout.item_app_picker, available
-        ) {
-            override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
-                val view = convertView ?: layoutInflater.inflate(R.layout.item_app_picker, parent, false)
-                val item = getItem(position)!!
-                view.findViewById<android.widget.ImageView>(R.id.app_icon)?.setImageDrawable(item.icon)
-                view.findViewById<android.widget.TextView>(R.id.app_name)?.text = item.name
-                return view
-            }
+        // Show dialog immediately with loading state; populate on background thread
+        val recyclerView = androidx.recyclerview.widget.RecyclerView(this).apply {
+            layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this@MainActivity)
+            setPadding(0, 8, 0, 8)
         }
 
-        android.app.AlertDialog.Builder(this, android.app.AlertDialog.THEME_DEVICE_DEFAULT_DARK)
+        val dialog = android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
             .setTitle(R.string.select_app)
-            .setAdapter(adapter) { _, which ->
-                addManualGame(available[which].packageName)
-                setupGameGrid()
-            }
+            .setView(recyclerView)
             .setNegativeButton(R.string.btn_cancel, null)
             .show()
+
+        // Load on background thread — getInstalledApplications + getApplicationIcon blocks UI
+        Thread {
+            val pm = packageManager
+            val manualGames = getManualGames()
+            val available = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                .filter { app ->
+                    app.packageName != packageName &&
+                    pm.getLaunchIntentForPackage(app.packageName) != null &&
+                    !manualGames.contains(app.packageName)
+                }
+                .map { app ->
+                    GameModel(
+                        name        = pm.getApplicationLabel(app).toString(),
+                        packageName = app.packageName,
+                        icon        = pm.getApplicationIcon(app)
+                    )
+                }
+                .sortedBy { it.name.lowercase() }
+
+            runOnUiThread {
+                if (!dialog.isShowing) return@runOnUiThread
+                recyclerView.adapter = AppPickerAdapter(available) { pkg ->
+                    dialog.dismiss()
+                    addManualGame(pkg)
+                    setupGameGrid()
+                }
+            }
+        }.start()
     }
 
     private fun showRemoveDialog(pkg: String) {
