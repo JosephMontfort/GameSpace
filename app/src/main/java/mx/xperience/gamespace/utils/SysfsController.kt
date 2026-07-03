@@ -227,7 +227,7 @@ class SysfsController {
      * profile; 0 is the stock/default profile.
      */
     fun setSconfig(value: Int) {
-        val path = "/sys/class/thermal/sconfig"
+        val path = "/sys/class/thermal/thermal_message/sconfig"
         if (exists(path)) {
             executeSu(path, value.toString())
         }
