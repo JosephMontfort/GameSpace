@@ -219,6 +219,20 @@ class SysfsController {
         return Pair(freq, temp)
     }
 
+    /* ===================== SCONFIG ===================== */
+
+    /**
+     * Sets the thermal sconfig node — a vendor-specific thermal/scheduling
+     * configuration knob. Value 9 unlocks the highest performance thermal
+     * profile; 0 is the stock/default profile.
+     */
+    fun setSconfig(value: Int) {
+        val path = "/sys/class/thermal/sconfig"
+        if (exists(path)) {
+            executeSu(path, value.toString())
+        }
+    }
+
     /* ===================== MODES ===================== */
     fun applyEco() {
         setCpuGovernor("powersave")
@@ -227,6 +241,7 @@ class SysfsController {
         setCpuBoost(false)
         setGpuGovernor("powersave")
         setGpuBoost(false)
+        setSconfig(0)
     }
 
     fun applyBalanced() {
@@ -237,6 +252,7 @@ class SysfsController {
         setCpuBoost(false)
         setGpuGovernor("msm-adreno-tz")
         setGpuBoost(false)
+        setSconfig(0)
     }
 
     fun applyPerformance() {
@@ -249,6 +265,7 @@ class SysfsController {
         setCpuBoost(true)
         setGpuGovernor("performance")
         setGpuBoost(true)
+        setSconfig(9)
     }
 
     fun applyTurbo() {
@@ -259,5 +276,6 @@ class SysfsController {
         setCpuBoost(true)
         setGpuGovernor("performance")
         setGpuBoost(true)
+        setSconfig(9)
     }
 }
