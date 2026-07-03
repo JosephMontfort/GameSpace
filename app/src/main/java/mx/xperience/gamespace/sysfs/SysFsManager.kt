@@ -85,19 +85,39 @@ object SysFsManager {
         }
     }
 
+    /**
+     * Writes to a sysfs node using a one-shot `su -c` process.
+     *
+     * The persistent shell (used for reads) proved unreliable for writes on
+     * some devices/su implementations — piping "echo ... > path\n" into a
+     * long-lived shell's stdin doesn't always commit for certain sysfs nodes,
+     * especially thermal/vendor nodes. GarnetForge (verified working for the
+     * same class of writes) uses one-shot `su -c` execution instead, so this
+     * mirrors that approach: printf the value via a fresh su process, then
+     * read the node back to confirm the value actually stuck.
+     *
+     * The persistent shell is untouched and still used for all reads.
+     */
     @Synchronized
     fun executeSu(path: String, value: String) {
-        ensureShell()
-        val out = suOut ?: return
         try {
-            // BUG FIX: original code used echo "$value" > "$path" via the persistent shell,
-            // but the fallback spawned a NEW process for each write — inconsistent and leaky.
-            // Always use the persistent shell here.
-            out.writeBytes("echo \"$value\" > \"$path\" 2>/dev/null\n")
-            out.flush()
+            val cmd = "printf '%s' \"$value\" > \"$path\" 2>/dev/null"
+            val proc = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+            proc.waitFor()
+
+            // Verify: read the node back and confirm it matches what we wrote.
+            // Some nodes normalize the value (e.g. trailing newline stripped,
+            // or the driver rounds/clamps) so we log a mismatch rather than
+            // treat it as a hard failure.
+            val verifyProc = Runtime.getRuntime().exec(arrayOf("su", "-c", "cat \"$path\" 2>/dev/null"))
+            val actual = verifyProc.inputStream.bufferedReader().readText().trim()
+            verifyProc.waitFor()
+
+            if (actual != value.trim()) {
+                Log.w(TAG, "Write verify mismatch on $path: wrote '$value', read back '$actual'")
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "executeSu failed for $path: ${e.message}")
-            closeShell()
+            Log.e(TAG, "executeSu (one-shot) failed for $path: ${e.message}")
         }
     }
 
